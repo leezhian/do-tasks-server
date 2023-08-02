@@ -1,5 +1,7 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// remark：不支持多文件原因 https://github.com/prisma/prisma/issues/2377
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,7 +13,7 @@ datasource db {
 
 model User {
   id        Int      @id @default(autoincrement())
-  uid       String   @unique @default(uuid()) @db.VarChar(20)
+  uid       String   @unique @default(uuid())
   phone     String   @unique @db.VarChar(20)
   email     String?  @unique
   name      String?  @db.VarChar(16)
@@ -22,8 +24,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  Teams Team[] // 一个用户可以创建多个团队(外键关联)
-  Tasks Task[]
+  Teams    Team[] // 一个用户可以创建多个团队(外键关联)
+  Tasks    Task[]
   TaskLogs TaskLog[]
 }
 
@@ -33,7 +35,7 @@ model Team {
   name       String   @db.VarChar(16)
   members    String?  @db.VarChar(255) // 逗号分隔的用户uid
   status     Int      @default(1) @db.TinyInt // 1: 正常 0: 禁用
-  creator_id String   @db.VarChar(20)
+  creator_id String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -59,7 +61,7 @@ model Task {
   content         String?  @db.VarChar(255) // 详情链接
   status          Int      @default(1) @db.TinyInt // 1: 正常 0: 禁用
   project_id      String   @db.VarChar(20) // 项目id
-  creator_id      String   @db.VarChar(20) // 创建者id
+  creator_id      String // 创建者id
   process_type_id Int      @db.Int // 流程类型id
   priority        Int?     @default(4) @db.TinyInt // 0: p0 1: p1 2: p2 3: p3 4: p4
   start_time      DateTime
@@ -80,11 +82,11 @@ model TaskLog {
   id        Int      @id @default(autoincrement())
   task_id   String   @db.VarChar(20) // 任务id 0: 删除 1: 创建 2: 修改  3: 完成 4: 取消完成 5: 审核通过 6: 审核不通过 （审核通过代表任务正式完成）
   type      Int      @db.TinyInt // 任务日志类型
-  editor_id String   @db.VarChar(20) // 编辑者id
+  editor_id String // 编辑者id
   createdAt DateTime @default(now())
 
   editorId User @relation(fields: [editor_id], references: [uid])
-  taskId Task @relation(fields: [task_id], references: [task_id])
+  taskId   Task @relation(fields: [task_id], references: [task_id])
 }
 
 model ProcessType {
