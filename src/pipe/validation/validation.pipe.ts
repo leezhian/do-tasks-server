@@ -1,3 +1,8 @@
+/*
+ * @Author: kim
+ * @Date: 2023-08-02 13:27:41
+ * @Description: 校验通道
+ */
 import { ArgumentMetadata, Injectable, PipeTransform, BadRequestException } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { plainToClass } from 'class-transformer';
