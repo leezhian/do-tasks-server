@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException, Injectable } from '@nestjs/common';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
 import { PrismaService } from '../prisma/prisma.service'
@@ -12,8 +12,8 @@ export class TeamService {
    * @description: 创建团队
    * @param {CreateTeamDto} createTeamDto
    * @return {*}
-   */  
-  create(uid: string, createTeamDto: CreateTeamDto) {
+   */
+  createTeam(uid: string, createTeamDto: CreateTeamDto) {
     return this.prisma.team.create({
       data: {
         name: createTeamDto.name,
@@ -29,24 +29,53 @@ export class TeamService {
     })
   }
 
-  async checkTeamExistAndRole(uid: string, teamId: string) {
-    if(!teamId) {
+  /**
+   * @description: 根据团队id获取团队详情
+   * @param {string} teamId
+   * @return {*}
+   */
+  getActiveTeamById(teamId: string) {
+    if (!teamId) {
       throw new BadRequestException('团队id不能为空')
     }
 
-    const team = await this.prisma.team.findUnique({
+    return this.prisma.team.findUnique({
       where: {
         team_id: teamId,
         status: TeamStatus.Active
       }
     })
+  }
 
-    if(!team) {
-      throw new BadRequestException('团队不存在')
+  /**
+   * @description: 判断是否是团队成员
+   * @param {string} uid 用户uid
+   * @param {string} members 团队成员
+   * @return {*}
+   */  
+  isTeamMember(uid: string, members: string) {
+    return (members ?? "").split(',').includes(uid)
+  }
+
+  /**
+   * @description: 判断团队是否存在并且有权限
+   * @param {string} uid
+   * @param {string} teamId
+   * @return {*}
+   */  
+  async checkTeamExistAndPermission(uid: string, teamId: string) {
+    const team = await this.getActiveTeamById(teamId)
+
+    if (!team) {
+      throw new NotFoundException('团队不存在')
     }
 
-    if(team.creator_id !== uid) {
-      throw new ForbiddenException('您没有权限修改该团队')
+    console.log('uid', uid);
+    
+    console.log(team.members);
+    
+    if (team.creator_id !== uid && !this.isTeamMember(uid, team.members)) {
+      throw new ForbiddenException('您没有权限访问该团队')
     }
   }
 
@@ -55,9 +84,9 @@ export class TeamService {
    * @param {string} teamId 团队id
    * @param {UpdateTeamDto} updateTeamDto
    * @return {*}
-   */  
-  async update(uid: string, teamId: string, updateTeamDto: UpdateTeamDto) {
-    await this.checkTeamExistAndRole(uid, teamId)
+   */
+  async updateTeam(uid: string, teamId: string, updateTeamDto: UpdateTeamDto) {
+    await this.checkTeamExistAndPermission(uid, teamId)
 
     await this.prisma.team.update({
       where: {
@@ -80,9 +109,9 @@ export class TeamService {
    * @param {string} uid 用户uid
    * @param {string} teamId 团队id
    * @return {*}
-   */  
-  async remove(uid: string, teamId: string) {
-    await this.checkTeamExistAndRole(uid, teamId)
+   */
+  async removeTeam(uid: string, teamId: string) {
+    await this.checkTeamExistAndPermission(uid, teamId)
 
     await this.prisma.team.update({
       where: {
@@ -97,5 +126,21 @@ export class TeamService {
       code: 200,
       message: '删除成功'
     }
+  }
+
+  /**
+   * @description: 获取我的团队列表
+   * @param {string} uid
+   * @return {*}
+   */
+  getMyTeamList(uid: string) {
+    return this.prisma.team.findMany({
+      where: {
+        status: TeamStatus.Active,
+        AND: [{
+          members: { contains: uid }
+        }]
+      }
+    })
   }
 }

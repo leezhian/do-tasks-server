@@ -40,18 +40,21 @@ model Team {
   updatedAt  DateTime @updatedAt
 
   creatorId    User          @relation(fields: [creator_id], references: [uid]) // 定义外键，creator外键名
+  Projects     Project[]
   ProcessTypes ProcessType[]
 }
 
 model Project {
   id         Int      @id @default(autoincrement())
-  project_id String   @unique @db.VarChar(20) // 待定，考虑是否使用 cuid
+  project_id String   @unique @default(cuid()) @db.VarChar(30) // 待定，考虑是否使用 cuid
   name       String   @db.VarChar(20)
   status     Int      @default(1) @db.TinyInt // 1: 正常 0: 禁用 2:表示归档
+  team_id    String   @db.VarChar(30) // 团队id
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  Tasks Task[]
+  teamId Team   @relation(fields: [team_id], references: [team_id])
+  Tasks  Task[]
 }
 
 model Task {
@@ -60,7 +63,7 @@ model Task {
   title           String   @db.VarChar(20)
   content         String?  @db.VarChar(255) // 详情链接
   status          Int      @default(1) @db.TinyInt // 1: 正常 0: 禁用
-  project_id      String   @db.VarChar(20) // 项目id
+  project_id      String   @db.VarChar(30) // 项目id
   creator_id      String // 创建者id
   process_type_id Int      @db.Int // 流程类型id
   priority        Int?     @default(4) @db.TinyInt // 0: p0 1: p1 2: p2 3: p3 4: p4

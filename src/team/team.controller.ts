@@ -8,20 +8,26 @@ export class TeamController {
   constructor(private readonly teamService: TeamService) {}
 
   @Post('/create')
-  create(@Request() req, @Body() createTeamDto: CreateTeamDto) {
+  createTeam(@Request() req, @Body() createTeamDto: CreateTeamDto) {
     const { uid } = req.user
-    return this.teamService.create(uid, createTeamDto);
+    return this.teamService.createTeam(uid, createTeamDto);
   }
 
-  @Patch('/:id')
-  update(@Request() req, @Param('id') id: string, @Body() updateTeamDto: UpdateTeamDto) {
+  @Get('/list')
+  getMyTeamList(@Request() req) {
     const { uid } = req.user
-    return this.teamService.update(uid, id, updateTeamDto);
+    return this.teamService.getMyTeamList(uid);
   }
 
-  @Delete('/:id')
-  remove(@Request() req, @Param('id') id: string) {
+  @Patch('/:teamId')
+  updateTeam(@Request() req, @Param('teamId') teamId: string, @Body() updateTeamDto: UpdateTeamDto) {
     const { uid } = req.user
-    return this.teamService.remove(uid, id);
+    return this.teamService.updateTeam(uid, teamId, updateTeamDto);
+  }
+
+  @Delete('/:teamId')
+  removeTeam(@Request() req, @Param('teamId') teamId: string) {
+    const { uid } = req.user
+    return this.teamService.removeTeam(uid, teamId);
   }
 }

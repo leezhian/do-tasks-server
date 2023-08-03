@@ -1,11 +1,18 @@
 // 账号状态
 export enum AccountStatus {
-  Active = 1,
-  Ban = 0
+  Ban = 0,
+  Active
 }
 
 // 团队状态
 export enum TeamStatus {
-  Active = 1,
-  Ban = 0
+  Ban,
+  Active
+}
+
+// 项目状态（待补充)
+export enum ProjectStatus {
+  Ban,
+  Active,
+  Archive
 }
