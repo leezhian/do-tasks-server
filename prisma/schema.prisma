@@ -31,7 +31,7 @@ model User {
 
 model Team {
   id         Int      @id @default(autoincrement())
-  team_id    String   @unique @db.VarChar(20)
+  team_id    String   @unique @default(cuid()) @db.VarChar(30) // 团队id
   name       String   @db.VarChar(16)
   members    String?  @db.VarChar(255) // 逗号分隔的用户uid
   status     Int      @default(1) @db.TinyInt // 1: 正常 0: 禁用
@@ -93,7 +93,7 @@ model ProcessType {
   id        Int      @id @default(autoincrement())
   name      String   @db.VarChar(10)
   status    Int      @default(1) @db.TinyInt // 1: 正常 0: 禁用
-  team_id   String   @db.VarChar(20) // 团队id
+  team_id   String   @db.VarChar(30) // 团队id
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

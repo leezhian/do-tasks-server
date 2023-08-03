@@ -1,25 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import * as md5 from 'crypto-js/md5';
 import { CreateUserDto } from './dto/create-user.dto';
-// import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import type { UserInfo } from '../typings/user';
-import type { ResponseData } from '../typings/base';
+import { AccountStatus } from '../helper/constants'
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * @description: 创建用户
    * @param {CreateUserDto} userInfo
-   * @return {*}
-   */  
+   * @return {Promise<UserInfo>}
+   */
   async createUser(userInfo: CreateUserDto): Promise<UserInfo> {
     const { password } = userInfo
     const encryptPassword = md5(password).toString()
-    
-    const user = await this.prisma.user.create({
+
+    return this.prisma.user.create({
       data: {
         name: userInfo.name ?? `未命名${Date.now()}`,
         phone: userInfo.phone,
@@ -38,19 +38,18 @@ export class UserService {
         sex: true,
       }
     })
-    
-    return user
   }
 
   /**
    * @description: 根据手机号获取用户信息
    * @param {string} phone
-   * @return {*}
-   */  
+   * @return {Promise<UserInfo>}
+   */
   async getUserInfoByPhone(phone: string): Promise<UserInfo> {
-    const user = await this.prisma.user.findUnique({
+    return await this.prisma.user.findUnique({
       where: {
-        phone: phone
+        phone: phone,
+        status: AccountStatus.Active
       },
       select: {
         uid: true,
@@ -62,19 +61,18 @@ export class UserService {
         sex: true,
       }
     })
-
-    return user
   }
 
   /**
    * @description: 根据uid获取用户信息
    * @param {string} uid
    * @return {Promise<UserInfo>}
-   */  
-  async getUserInfoById(uid: string): Promise<ResponseData<Omit<UserInfo, 'password'>>> {
-    const userInfo = await this.prisma.user.findUnique({
+   */
+  async getUserInfoById(uid: string): Promise<Omit<UserInfo, 'password'>>  {
+    return this.prisma.user.findUnique({
       where: {
-        uid
+        uid,
+        status: AccountStatus.Active
       },
       select: {
         uid: true,
@@ -85,19 +83,23 @@ export class UserService {
         sex: true,
       }
     })
-
-    return {
-      code: 200,
-      msg: '成功',
-      data: userInfo
-    }
   }
 
-  // update(id: number, updateUserDto: UpdateUserDto) {
-  //   return `This action updates a #${id} user`;
-  // }
-
-  // remove(id: number) {
-  //   return `This action removes a #${id} user`;
-  // }
+  /**
+   * @description: 修改用户信息
+   * @param {string} uid 
+   * @param {UpdateUserDto} payload
+   * @return {*}
+   */  
+  async update(uid: string, payload: UpdateUserDto) {
+    return this.prisma.user.update({
+      where: {
+        uid,
+        status: AccountStatus.Active
+      },
+      data: {
+        ...payload
+      }
+    })
+  }
 }

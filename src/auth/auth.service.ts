@@ -10,6 +10,11 @@ import type { UserInfo } from '../typings/user'
 export class AuthService {
   constructor(private readonly userService: UserService, private readonly jwtService: JwtService) { }
 
+  /**
+   * @description: 登录或注册
+   * @param {AuthDto} payload
+   * @return {Promise}
+   */  
   async loginOrRegister(payload: AuthDto) {
     const { phone, password } = payload
     let userInfo: UserInfo = await this.userService.getUserInfoByPhone(phone)
@@ -27,10 +32,6 @@ export class AuthService {
     const token = await this.jwtService.signAsync({ uid: userInfo.uid, phone: userInfo.phone })
     userInfo.token = token
 
-    return {
-      code: 200,
-      msg: '成功',
-      data: omit(userInfo, ['password'])
-    }
+    return omit(userInfo, ['password'])
   }
 }
