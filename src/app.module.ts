@@ -6,9 +6,10 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { TeamModule } from './team/team.module';
 import { ProjectModule } from './project/project.module';
+import { ProcessTypeModule } from './process-type/process-type.module';
 
 @Module({
-  imports: [PrismaModule, UserModule, AuthModule, TeamModule, ProjectModule],
+  imports: [PrismaModule, UserModule, AuthModule, TeamModule, ProjectModule, ProcessTypeModule],
   controllers: [],
   providers: [
     {

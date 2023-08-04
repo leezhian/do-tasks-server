@@ -16,3 +16,9 @@ export enum ProjectStatus {
   Active,
   Archive
 }
+
+// 流程类型状态
+export enum ProcessTypeStatus {
+  Ban,
+  Active
+}
