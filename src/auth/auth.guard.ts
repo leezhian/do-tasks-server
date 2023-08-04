@@ -7,6 +7,7 @@ import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from
 import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express'
 import { Reflector } from '@nestjs/core';
+import { isUUID } from 'class-validator';
 import { IS_PUBLIC_KEY } from './auth.decorator';
 
 @Injectable()
@@ -35,7 +36,11 @@ export class AuthGuard implements CanActivate {
     try {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: process.env.SECRET
-      });
+      })
+
+      if(!payload.uid || !isUUID(payload.uid, 4)) {
+        throw new UnauthorizedException('非法字符串')
+      }
 
       request['user'] = payload;
     } catch (error) {

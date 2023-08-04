@@ -69,10 +69,6 @@ export class TeamService {
     if (!team) {
       throw new NotFoundException('团队不存在')
     }
-
-    console.log('uid', uid);
-    
-    console.log(team.members);
     
     if (team.creator_id !== uid && !this.isTeamMember(uid, team.members)) {
       throw new ForbiddenException('您没有权限访问该团队')

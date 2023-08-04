@@ -1,6 +1,7 @@
-import { Controller, Get, Patch, Body, Request, HttpStatus, HttpCode } from '@nestjs/common';
+import { Controller, Get, Patch, Body, HttpStatus, HttpCode } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserAuthInfo } from '../auth/auth.decorator';
 
 @Controller('user')
 export class UserController {
@@ -8,15 +9,13 @@ export class UserController {
 
   @Get('/info')
   @HttpCode(HttpStatus.OK)
-  getUserInfo(@Request() req) {    
-    const { uid } = req.user
+  getUserInfo(@UserAuthInfo('uid') uid: string) {    
     return this.userService.getUserInfoById(uid)
   }
 
   @Patch('/update')
   @HttpCode(HttpStatus.OK)
-  async update(@Request() req, @Body() body: UpdateUserDto) {
-    const { uid } = req.user
+  async update(@UserAuthInfo('uid') uid: string, @Body() body: UpdateUserDto) {
     await this.userService.update(uid, body)
     
     return {

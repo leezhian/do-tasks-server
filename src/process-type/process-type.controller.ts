@@ -1,27 +1,25 @@
-import { Controller, Get, Post, Body, Param, Delete, Request, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Query } from '@nestjs/common';
 import { ProcessTypeService } from './process-type.service';
 import { CreateProcessTypeDto } from './dto/create-process-type.dto';
 import { SelectProcessTypesDto } from './dto/select-process-types.dto';
+import { UserAuthInfo } from '../auth/auth.decorator';
 
 @Controller('process-type')
 export class ProcessTypeController {
   constructor(private readonly processTypeService: ProcessTypeService) {}
 
   @Post('/create')
-  create(@Request() req, @Body() createProcessTypeDto: CreateProcessTypeDto) {
-    const { uid } = req.user;
+  create(@UserAuthInfo('uid') uid: string, @Body() createProcessTypeDto: CreateProcessTypeDto) {
     return this.processTypeService.create(uid, createProcessTypeDto);
   }
 
   @Get('/list')
-  findAll(@Request() req, @Query() query: SelectProcessTypesDto) {
-    const { uid } = req.user;
+  findAll(@UserAuthInfo('uid') uid: string, @Query() query: SelectProcessTypesDto) {
     return this.processTypeService.findAll(uid, query);
   }
 
   @Delete(':id')
-  remove(@Request() req, @Param('id') id: string) {
-    const { uid } = req.user;
+  remove(@UserAuthInfo('uid') uid: string, @Param('id') id: string) {
     return this.processTypeService.remove(uid, +id);
   }
 }
