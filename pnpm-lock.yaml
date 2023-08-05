@@ -12,6 +12,7 @@ specifiers:
   '@prisma/client': ^5.1.0
   '@types/express': ^4.17.13
   '@types/jest': 29.5.1
+  '@types/multer': ^1.4.7
   '@types/node': 18.16.12
   '@types/supertest': ^2.0.11
   '@typescript-eslint/eslint-plugin': ^5.0.0
@@ -19,6 +20,7 @@ specifiers:
   class-transformer: ^0.5.1
   class-validator: ^0.14.0
   crypto-js: ^4.1.1
+  dayjs: ^1.11.9
   eslint: ^8.0.1
   eslint-config-prettier: ^8.3.0
   eslint-plugin-prettier: ^4.0.0
@@ -46,6 +48,7 @@ dependencies:
   class-transformer: 0.5.1
   class-validator: 0.14.0
   crypto-js: 4.1.1
+  dayjs: 1.11.9
   lodash: 4.17.21
   prisma: 5.0.0
   reflect-metadata: 0.1.13
@@ -57,6 +60,7 @@ devDependencies:
   '@nestjs/testing': 9.4.3_c2suh6ay6qzrduk6sfgpcvxpvi
   '@types/express': 4.17.17
   '@types/jest': 29.5.1
+  '@types/multer': 1.4.7
   '@types/node': 18.16.12
   '@types/supertest': 2.0.12
   '@typescript-eslint/eslint-plugin': 5.62.0_c42x62htuvinjyo6sqia6oy3e4
@@ -1253,6 +1257,12 @@ packages:
     resolution: {integrity: sha512-Y4XFY5VJAuw0FgAqPNd6NNoV44jbq9Bz2L7Rh/J6jLTiHBSBJa9fxqQIvkIld4GsoDOcCbvzOUAbLPsSKKg+uA==}
     dev: true
 
+  /@types/multer/1.4.7:
+    resolution: {integrity: sha512-/SNsDidUFCvqqcWDwxv2feww/yqhNeTRL5CVoL3jU4Goc4kKEL10T7Eye65ZqPNi4HRx8sAEX59pV1aEH7drNA==}
+    dependencies:
+      '@types/express': 4.17.17
+    dev: true
+
   /@types/node/18.16.12:
     resolution: {integrity: sha512-tIRrjbY9C277MOfP8M3zjMIhtMlUJ6YVqkGgLjz+74jVsdf4/UjC6Hku4+1N0BS0qyC0JAS6tJLUk9H6JUKviQ==}
 
@@ -2163,6 +2173,10 @@ packages:
 
   /crypto-js/4.1.1:
     resolution: {integrity: sha512-o2JlM7ydqd3Qk9CA0L4NL6mTzU2sdx96a+oOfPu8Mkl/PK51vSyoi8/rQ8NknZtk44vq15lmhAj9CIAGwgeWKw==}
+    dev: false
+
+  /dayjs/1.11.9:
+    resolution: {integrity: sha512-QvzAURSbQ0pKdIye2txOzNaHmxtUBXerpY0FJsFXUMKbIZeFm5ht1LS/jFsrncjnmtv8HsG0W2g6c0zUjZWmpA==}
     dev: false
 
   /debug/2.6.9:

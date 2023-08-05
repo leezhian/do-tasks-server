@@ -1,3 +1,4 @@
+import { join } from 'path';
 // 账号状态
 export enum AccountStatus {
   Ban = 0,
@@ -22,3 +23,6 @@ export enum ProcessTypeStatus {
   Ban,
   Active
 }
+
+// 上传文件路径
+export const uploadPath = join(process.cwd(), '/files')
