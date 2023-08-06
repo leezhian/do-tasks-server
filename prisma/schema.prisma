@@ -46,7 +46,7 @@ model Team {
 
 model Project {
   id         Int      @id @default(autoincrement())
-  project_id String   @unique @default(cuid()) @db.VarChar(30) // 待定，考虑是否使用 cuid
+  project_id String   @unique @default(cuid()) @db.VarChar(30) // 项目id
   name       String   @db.VarChar(20)
   status     Int      @default(1) @db.TinyInt // 1: 正常 0: 禁用 2:表示归档
   team_id    String   @db.VarChar(30) // 团队id
@@ -59,16 +59,16 @@ model Project {
 
 model Task {
   id              Int      @id @default(autoincrement())
-  task_id         String   @unique @db.VarChar(20) // 任务id
-  title           String   @db.VarChar(20)
+  task_id         String   @unique @default(cuid()) @db.VarChar(30) // 任务id
+  title           String   @db.VarChar(50)
   content         String?  @db.VarChar(255) // 详情链接
   status          Int      @default(1) @db.TinyInt // 1: 正常 0: 禁用
   project_id      String   @db.VarChar(30) // 项目id
   creator_id      String // 创建者id
   process_type_id Int      @db.Int // 流程类型id
   priority        Int?     @default(4) @db.TinyInt // 0: p0 1: p1 2: p2 3: p3 4: p4
-  start_time      DateTime
-  end_time        DateTime
+  start_time      Int
+  end_time        Int
   reviewer_ids    String?  @db.VarChar(255) // 审核人id
   owner_ids       String?  @db.VarChar(255) // 负责人id
   createdAt       DateTime @default(now())
@@ -83,7 +83,7 @@ model Task {
 
 model TaskLog {
   id        Int      @id @default(autoincrement())
-  task_id   String   @db.VarChar(20) // 任务id 0: 删除 1: 创建 2: 修改  3: 完成 4: 取消完成 5: 审核通过 6: 审核不通过 （审核通过代表任务正式完成）
+  task_id   String   @db.VarChar(30) // 任务id 0: 删除 1: 创建 2: 修改  3: 完成 4: 取消完成 5: 审核通过 6: 审核不通过 （审核通过代表任务正式完成）
   type      Int      @db.TinyInt // 任务日志类型
   editor_id String // 编辑者id
   createdAt DateTime @default(now())

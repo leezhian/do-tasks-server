@@ -52,7 +52,7 @@ export class TeamService {
    * @param {string} uid 用户uid
    * @param {string} members 团队成员
    * @return {*}
-   */  
+   */
   isTeamMember(uid: string, members: string) {
     return (members ?? "").split(',').includes(uid)
   }
@@ -62,14 +62,14 @@ export class TeamService {
    * @param {string} uid
    * @param {string} teamId
    * @return {*}
-   */  
+   */
   async checkTeamExistAndPermission(uid: string, teamId: string) {
     const team = await this.getActiveTeamById(teamId)
 
     if (!team) {
       throw new NotFoundException('团队不存在')
     }
-    
+
     if (team.creator_id !== uid && !this.isTeamMember(uid, team.members)) {
       throw new ForbiddenException('您没有权限访问该团队')
     }
@@ -133,9 +133,16 @@ export class TeamService {
     return this.prisma.team.findMany({
       where: {
         status: TeamStatus.Active,
-        AND: [{
+        OR: [{
           members: { contains: uid }
+        }, {
+          creator_id: uid
         }]
+      },
+      select: {
+        team_id: true,
+        name: true,
+        members: true,
       }
     })
   }

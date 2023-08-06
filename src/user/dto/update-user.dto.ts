@@ -1,5 +1,6 @@
 import { Type } from "class-transformer"
 import { IsString, IsOptional, IsIn } from "class-validator"
+import { Transform } from "class-transformer"
 
 export class UpdateUserDto {
   // 可选字段
@@ -8,6 +9,7 @@ export class UpdateUserDto {
   readonly email?: string
   @IsOptional()
   @IsString()
+  @Transform(({ value }) => value.trim())
   readonly name?: string
   @IsOptional()
   @IsString()

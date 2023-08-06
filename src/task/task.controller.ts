@@ -2,15 +2,17 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { TaskService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
-import { UserAuthInfo } from '../auth/auth.decorator';
+import { UserAuthInfo } from '../auth/auth.decorator'
 
 @Controller('task')
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
-  @Post()
-  create(@Body() createTaskDto: CreateTaskDto) {
-    return this.taskService.create(createTaskDto);
+  @Post('/create')
+  create(@UserAuthInfo('uid') uid: string, @Body() createTaskDto: CreateTaskDto) {
+    console.log(createTaskDto);
+    
+    return this.taskService.create(uid, createTaskDto);
   }
 
   @Get("/list")
