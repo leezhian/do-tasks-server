@@ -39,7 +39,7 @@ model Team {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  creatorId    User          @relation(fields: [creator_id], references: [uid]) // 定义外键，creator外键名
+  creator      User          @relation(fields: [creator_id], references: [uid]) // 定义外键，creator外键名
   Projects     Project[]
   ProcessTypes ProcessType[]
 }
@@ -53,8 +53,8 @@ model Project {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  teamId Team   @relation(fields: [team_id], references: [team_id])
-  Tasks  Task[]
+  team  Team   @relation(fields: [team_id], references: [team_id])
+  Tasks Task[]
 }
 
 model Task {
@@ -74,8 +74,8 @@ model Task {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  creatorId     User        @relation(fields: [creator_id], references: [uid])
-  projectId     Project     @relation(fields: [project_id], references: [project_id])
+  creator       User        @relation(fields: [creator_id], references: [uid])
+  project       Project     @relation(fields: [project_id], references: [project_id])
   processTypeId ProcessType @relation(fields: [process_type_id], references: [id])
 
   TaskLogs TaskLog[]
@@ -88,8 +88,8 @@ model TaskLog {
   editor_id String // 编辑者id
   createdAt DateTime @default(now())
 
-  editorId User @relation(fields: [editor_id], references: [uid])
-  taskId   Task @relation(fields: [task_id], references: [task_id])
+  editor User @relation(fields: [editor_id], references: [uid])
+  task   Task @relation(fields: [task_id], references: [task_id])
 }
 
 model ProcessType {
@@ -100,6 +100,6 @@ model ProcessType {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  teamId Team   @relation(fields: [team_id], references: [team_id])
-  Tasks  Task[]
+  team  Team   @relation(fields: [team_id], references: [team_id])
+  Tasks Task[]
 }

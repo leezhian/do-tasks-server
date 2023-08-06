@@ -24,5 +24,11 @@ export enum ProcessTypeStatus {
   Active
 }
 
+// 任务状态(待补充)
+export enum TaskStatus {
+  Ban,
+  Active,
+}
+
 // 上传文件路径
 export const uploadPath = join(process.cwd(), '/files')
