@@ -1,21 +1,59 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
-import { TaskStatus } from '../helper/constants';
+import { TaskStatus, ProjectStatus } from '../helper/constants';
+import { TeamService } from '../team/team.service'
+import { ProjectService } from '../project/project.service'
 
 @Injectable()
 export class TaskService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService, private readonly projectService: ProjectService, private readonly teamService: TeamService) { }
 
   /**
    * @description: 检查任务时间是否合理
    * @param {number} start 开始时间
    * @param {number} end 结束时间
    * @return {boolean}
-   */  
+   */
   checkTaskTimeIsReasonable(start: number, end: number) {
     return end >= start
+  }
+
+  /**
+   * @description: 根据任务id判断是否有团队权限，有则返回任务信息，无则抛出异常
+   * @param {string} uid
+   * @param {string} taskId
+   * @return {*}
+   */  
+  async checkTeamPermissionByTaskId(uid: string, taskId: string) {
+    const taskWithTeam = await this.prisma.task.findUnique({
+      where: {
+        task_id: taskId
+      },
+      include: {
+        project: {
+          include: {
+            team: true
+          }
+        }
+      }
+    })
+
+    if(!taskWithTeam) {
+      throw new NotFoundException('任务不存在')
+    }
+
+    if(!taskWithTeam.project || taskWithTeam.project.status === ProjectStatus.Ban) {
+      throw new NotFoundException('项目不存在')
+    }
+
+
+    if(taskWithTeam.project.team.creator_id !== uid && !this.teamService.isTeamMember(uid, taskWithTeam.project.team.members)) {
+      throw new ForbiddenException('您没有权限访问该团队')
+    }
+
+    return taskWithTeam
   }
 
   /**
@@ -23,12 +61,16 @@ export class TaskService {
    * @param {string} uid
    * @param {CreateTaskDto} createTaskDto
    * @return {*}
-   */  
+   */
   async create(uid: string, createTaskDto: CreateTaskDto) {
     const { start_time, end_time, project_id } = createTaskDto
-    // TODO 判断是否有权限创建任务
+    // 判断是否有权限创建任务
+    const project = await this.projectService.checkTeamPermissionByProjectId(uid, project_id)
+    if(project.status === ProjectStatus.Archive) {
+      throw new BadRequestException('项目已归档，无法创建任务')
+    }
 
-    if(!this.checkTaskTimeIsReasonable(start_time, end_time)) {
+    if (!this.checkTaskTimeIsReasonable(start_time, end_time)) {
       throw new BadRequestException('结束时间不能小于开始时间')
     }
 
@@ -73,9 +115,10 @@ export class TaskService {
    * @param {string} uid
    * @param {string} projectId
    * @return {*}
-   */  
-  findAllTasksOfProject(uid: string, projectId: string) {
-    // TODO 判断是否有权限查看任务列表
+   */
+  async findAllTasksOfProject(uid: string, projectId: string) {
+    // 判断是否有权限查看任务列表
+    await this.projectService.checkTeamPermissionByProjectId(uid, projectId)
 
     return this.prisma.task.findMany({
       where: {
@@ -101,9 +144,10 @@ export class TaskService {
    * @param {string} uid
    * @param {string} taskId
    * @return {*}
-   */  
-  findTaskDetail(uid: string, taskId: string) {
-    // TODO 判断是否有权限查看任务详情
+   */
+  async findTaskDetail(uid: string, taskId: string) {
+    // 判断是否有权限查看任务详情
+    await this.checkTeamPermissionByTaskId(uid, taskId)
 
     return this.prisma.task.findUnique({
       where: {
@@ -130,12 +174,16 @@ export class TaskService {
    * @param {string} taskId
    * @param {UpdateTaskDto} updateTaskDto
    * @return {*}
-   */  
-  update(uid: string, taskId: string, updateTaskDto: UpdateTaskDto) {
-    const { start_time, end_time } = updateTaskDto
-    // TODO 判断是否有权限更新任务
-
-    if(!this.checkTaskTimeIsReasonable(start_time, end_time)) {
+   */
+  async update(uid: string, taskId: string, updateTaskDto: UpdateTaskDto) {
+    // 判断是否有权限更新任务
+    const task = await this.checkTeamPermissionByTaskId(uid, taskId)
+    if(task.project.status === ProjectStatus.Archive) {
+      throw new BadRequestException('项目已归档，无法更新任务')
+    }
+    
+    const { start_time = task.start_time, end_time = task.end_time } = updateTaskDto
+    if (!this.checkTaskTimeIsReasonable(start_time, end_time)) {
       throw new BadRequestException('结束时间不能小于开始时间')
     }
 
@@ -166,9 +214,14 @@ export class TaskService {
    * @param {string} uid
    * @param {string} taskId
    * @return {*}
-   */  
+   */
   async removeTask(uid: string, taskId: string) {
-    // TODO 判断是否有权限删除任务
+    // 判断是否有权限删除任务
+    const task = await this.checkTeamPermissionByTaskId(uid, taskId)
+    if(task.project.status === ProjectStatus.Archive) {
+      throw new BadRequestException('项目已归档，无法更新任务')
+    }
+    
 
     await this.prisma.task.update({
       where: {

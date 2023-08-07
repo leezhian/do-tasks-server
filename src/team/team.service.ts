@@ -63,9 +63,10 @@ export class TeamService {
    * @param {string} teamId
    * @return {*}
    */
-  async checkTeamExistAndPermission(uid: string, teamId: string) {
+  async checkTeamPermissionByTeamId(uid: string, teamId: string) {
     const team = await this.getActiveTeamById(teamId)
 
+    
     if (!team) {
       throw new NotFoundException('团队不存在')
     }
@@ -82,7 +83,7 @@ export class TeamService {
    * @return {*}
    */
   async updateTeam(uid: string, teamId: string, updateTeamDto: UpdateTeamDto) {
-    await this.checkTeamExistAndPermission(uid, teamId)
+    await this.checkTeamPermissionByTeamId(uid, teamId)
 
     await this.prisma.team.update({
       where: {
@@ -107,7 +108,7 @@ export class TeamService {
    * @return {*}
    */
   async removeTeam(uid: string, teamId: string) {
-    await this.checkTeamExistAndPermission(uid, teamId)
+    await this.checkTeamPermissionByTeamId(uid, teamId)
 
     await this.prisma.team.update({
       where: {

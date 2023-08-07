@@ -6,6 +6,7 @@ import { TeamModule } from '../team/team.module'
 @Module({
   controllers: [ProjectController],
   providers: [ProjectService],
+  exports: [ProjectService],
   imports: [TeamModule]
 })
 export class ProjectModule {}

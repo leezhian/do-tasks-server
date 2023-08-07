@@ -11,6 +11,33 @@ export class ProjectService {
   constructor(private readonly prisma: PrismaService, private readonly teamService: TeamService) { }
 
   /**
+   * @description: 判断项目是否存在并且有权限（会深入判断是否有队伍权限）
+   * @param {string} uid
+   * @param {string} projectId 项目id
+   * @return {void}
+   */  
+  async checkTeamPermissionByProjectId(uid: string, projectId: string) {
+    const projectWithTeam = await this.prisma.project.findUnique({
+      where: {
+        project_id: projectId
+      },
+      include: {
+        team: true
+      }
+    })
+
+    if (!projectWithTeam || projectWithTeam.status === ProjectStatus.Ban) {
+      throw new NotFoundException('项目不存在')
+    }
+
+    if(projectWithTeam.team.creator_id !== uid && !this.teamService.isTeamMember(uid, projectWithTeam.team.members)) {
+      throw new ForbiddenException('您没有权限访问该团队')
+    }
+
+    return projectWithTeam
+  }
+
+  /**
    * @description: 创建项目
    * @param {string} uid
    * @param {CreateProjectDto} createProjectDto
@@ -18,7 +45,7 @@ export class ProjectService {
    */  
   async createProject(uid: string, createProjectDto: CreateProjectDto) {
     const { team_id } = createProjectDto
-    await this.teamService.checkTeamExistAndPermission(uid, team_id)
+    await this.teamService.checkTeamPermissionByTeamId(uid, team_id)
 
     return this.prisma.project.create({
       data: {
@@ -32,27 +59,7 @@ export class ProjectService {
       }
     })
   }
-
-  /**
-   * @description: 根据项目id获取项目信息
-   * @param {string} project_id
-   * @return {*}
-   */  
-  getProjectById(projectId: string) {
-    if(!projectId) {
-      throw new BadRequestException('项目不存在')
-    }
-
-    return this.prisma.project.findUnique({
-      where: {
-        project_id: projectId,
-        status: {
-          not: ProjectStatus.Ban
-        }
-      }
-    })
-  }
-
+  
   /**
    * @description: 修改项目信息
    * @param {string} uid 用户id
@@ -61,16 +68,10 @@ export class ProjectService {
    * @return {*}
    */  
   async updateProject(uid: string, projectId: string, updateProjectDto: UpdateProjectDto) {
-    const project = await this.getProjectById(projectId)
-    if(!project) {
-      throw new NotFoundException('项目不存在')
-    } else if(project.status !== ProjectStatus.Active) {
+    const project = await this.checkTeamPermissionByProjectId(uid, projectId)
+    if(project.status !== ProjectStatus.Active) {
       throw new BadRequestException('项目已归档')
     }
-
-    await this.teamService.checkTeamExistAndPermission(uid, project.team_id).catch(() => {
-      throw new ForbiddenException('您没有权限删除该项目')
-    })
 
     await this.prisma.project.update({
       where: {
@@ -90,7 +91,7 @@ export class ProjectService {
 
   async selectProjectsByIdAndStatus(uid: string, query: SelectProjectListDto) {
     const { team_id, status = ProjectStatus.Active } = query
-    await this.teamService.checkTeamExistAndPermission(uid, team_id)
+    await this.teamService.checkTeamPermissionByTeamId(uid, team_id)
 
     return this.prisma.project.findMany({
       where: {
@@ -112,14 +113,10 @@ export class ProjectService {
    * @return {*}
    */  
   async removeProject(uid: string, projectId: string) {
-    const project = await this.getProjectById(projectId)
-    if(!project) {
-      throw new NotFoundException('项目不存在')
+    const project = await this.checkTeamPermissionByProjectId(uid, projectId)
+    if(project.status === ProjectStatus.Active) {
+      throw new BadRequestException('项目已归档')
     }
-
-    await this.teamService.checkTeamExistAndPermission(uid, project.team_id).catch(() => {
-      throw new ForbiddenException('您没有权限删除该项目')
-    })
 
     await this.prisma.project.update({
       where: {

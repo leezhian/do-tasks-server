@@ -16,7 +16,7 @@ export class ProcessTypeService {
    * @return {*}
    */  
   async create(uid: string, createProcessTypeDto: CreateProcessTypeDto) {
-    await this.teamService.checkTeamExistAndPermission(uid, createProcessTypeDto.team_id)
+    await this.teamService.checkTeamPermissionByTeamId(uid, createProcessTypeDto.team_id)
 
     return this.prisma.processType.create({
       data: {
@@ -37,9 +37,9 @@ export class ProcessTypeService {
    * @param {SelectProcessTypesDto} query
    * @return {*}
    */  
-  async findAll(uid: string, query: SelectProcessTypesDto) {
+  async findAllProcessType(uid: string, query: SelectProcessTypesDto) {
     const { team_id } = query
-    await this.teamService.checkTeamExistAndPermission(uid, team_id)
+    await this.teamService.checkTeamPermissionByTeamId(uid, team_id)
 
     return this.prisma.processType.findMany({
       where: {
@@ -71,19 +71,19 @@ export class ProcessTypeService {
   /**
    * @description: 删除流程类型
    * @param {string} uid
-   * @param {number} id
+   * @param {number} processTypeId
    * @return {*}
    */  
-  async remove(uid: string, id: number) {
-    const processType = await this.getProcessTypeById(id)
+  async remove(uid: string, processTypeId: number) {
+    const processType = await this.getProcessTypeById(processTypeId)
     if(!processType) {
       throw new NotFoundException('流程类型不存在')
     }
 
-    await this.teamService.checkTeamExistAndPermission(uid, processType.team_id)
+    await this.teamService.checkTeamPermissionByTeamId(uid, processType.team_id)
     await this.prisma.processType.update({
       where: {
-        id
+        id: processTypeId
       },
       data: {
         status: ProcessTypeStatus.Ban

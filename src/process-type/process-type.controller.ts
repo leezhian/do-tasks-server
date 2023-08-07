@@ -14,8 +14,8 @@ export class ProcessTypeController {
   }
 
   @Get('/list')
-  findAll(@UserAuthInfo('uid') uid: string, @Query() query: SelectProcessTypesDto) {
-    return this.processTypeService.findAll(uid, query);
+  findAllProcessType(@UserAuthInfo('uid') uid: string, @Query() query: SelectProcessTypesDto) {
+    return this.processTypeService.findAllProcessType(uid, query);
   }
 
   @Delete(':id')
