@@ -1,6 +1,8 @@
-import { Controller, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Controller, Post, Get, UploadedFile, UseInterceptors, Query } from '@nestjs/common';
 import { CommonService } from './common.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { SearchDto } from './dto/search.dto';
+import { UserAuthInfo } from '../auth/auth.decorator';
 
 @Controller('common')
 export class CommonController {
@@ -9,6 +11,11 @@ export class CommonController {
   @UseInterceptors(FileInterceptor('file'))
   @Post('/upload')
   uploadFile(@UploadedFile() file: Express.Multer.File) {
-    return file
+    return this.commonService.upload(file)
+  }
+
+  @Get('/search')
+  search(@UserAuthInfo('uid') uid: string, @Query() query: SearchDto) {
+    return this.commonService.search(uid, query)
   }
 }
