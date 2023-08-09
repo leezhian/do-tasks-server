@@ -46,7 +46,7 @@ export class UserService {
    * @return {Promise<UserInfo>}
    */
   async getUserInfoByPhone(phone: string): Promise<UserInfo> {
-    return await this.prisma.user.findUnique({
+    return this.prisma.user.findUnique({
       where: {
         phone: phone,
         status: AccountStatus.Active
@@ -58,6 +58,29 @@ export class UserService {
         name: true,
         avatar: true,
         password: true,
+        sex: true,
+      }
+    })
+  }
+
+  /**
+   * @description: 根据手机号搜索用户
+   * @param {string} phone 
+   * @return {*}
+   */  
+  searchUser(uid: string, keyword: string) {
+    return this.prisma.user.findMany({
+      where: {
+        phone: keyword,
+        uid: {
+          not: uid
+        },
+        status: AccountStatus.Active
+      },
+      select: {
+        uid: true,
+        name: true,
+        avatar: true,
         sex: true,
       }
     })

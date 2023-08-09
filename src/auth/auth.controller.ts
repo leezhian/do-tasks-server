@@ -9,6 +9,7 @@ export class AuthController {
 
   @SkipAuth()
   @Post('/login')
+  @HttpCode(HttpStatus.OK)
   async loginOrRegister(@Body() body: AuthDto) {
     return this.authService.loginOrRegister(body)
   }

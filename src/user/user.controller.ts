@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Body, HttpStatus, HttpCode } from '@nestjs/common';
+import { Controller, Get, Patch, Body, HttpStatus, HttpCode, Query } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserAuthInfo } from '../auth/auth.decorator';
@@ -22,5 +22,10 @@ export class UserController {
       code: 200,
       message: '更新成功'
     }
+  }
+
+  @Get('/search')
+  searchUser(@UserAuthInfo('uid') uid: string , @Query('keyword') keyword: string) {
+    return this.userService.searchUser(uid, keyword)
   }
 }

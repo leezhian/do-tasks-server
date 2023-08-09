@@ -23,8 +23,6 @@ export class TeamService {
       select: {
         team_id: true,
         name: true,
-        creator_id: true,
-        members: true,
       }
     })
   }
@@ -142,8 +140,10 @@ export class TeamService {
       },
       select: {
         team_id: true,
-        name: true,
-        members: true,
+        name: true
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
     })
   }

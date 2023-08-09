@@ -22,7 +22,7 @@ export class AuthService {
     if (userInfo) {
       const inputPwd = md5(password).toString()
       if (userInfo.password !== inputPwd) {
-        throw new UnauthorizedException()
+        throw new UnauthorizedException('密码错误')
       }
     } else {
       userInfo = await this.userService.createUser(payload)
