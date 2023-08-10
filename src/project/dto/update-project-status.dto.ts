@@ -1,13 +1,11 @@
-import { PartialType } from '@nestjs/mapped-types';
+/*
+ * @Author: kim
+ * @Date: 2023-08-10 17:40:24
+ * @Description: 
+ */
 import { Type } from "class-transformer"
 import { IsIn } from "class-validator"
-import { CreateProjectDto } from './create-project.dto';
 import { ProjectStatus } from "../../helper/constants"
-
-export class UpdateProjectDto extends PartialType(CreateProjectDto) {
-}
-
-
 
 export class UpdateProjectStatusDto {
   @Type(() => Number)

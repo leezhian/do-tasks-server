@@ -11,7 +11,7 @@ export enum TeamStatus {
   Active
 }
 
-// 项目状态（待补充)
+// 项目状态
 export enum ProjectStatus {
   Ban,
   Active,

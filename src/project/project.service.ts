@@ -2,7 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { TeamService } from '../team/team.service'
 import { PrismaService } from '../prisma/prisma.service'
 import { CreateProjectDto } from './dto/create-project.dto';
-import { UpdateProjectDto } from './dto/update-project.dto';
+import { UpdateProjectDto, UpdateProjectStatusDto } from './dto/update-project.dto';
 import { SelectProjectListDto } from './dto/select-project-list.dto';
 import { ProjectStatus } from '../helper/constants'
 
@@ -78,8 +78,7 @@ export class ProjectService {
         project_id: projectId
       },
       data: {
-        name: updateProjectDto.name,
-        status: updateProjectDto.status
+        name: updateProjectDto.name
       }
     })
 
@@ -89,6 +88,37 @@ export class ProjectService {
     }
   }
 
+  /**
+   * @description: 修改项目状态
+   * @param {string} uid 用户id
+   * @param {string} projectId 项目id
+   * @param {UpdateProjectStatusDto} updateProjectStatusDto
+   * @return {*}
+   */  
+  async updateProjectStatus(uid: string, projectId: string, updateProjectStatusDto: UpdateProjectStatusDto) {
+    await this.checkTeamPermissionByProjectId(uid, projectId)
+
+    await this.prisma.project.update({
+      where: {
+        project_id: projectId
+      },
+      data: {
+        status: updateProjectStatusDto.status
+      }
+    })
+
+    return {
+      code: 200,
+      message: '更新成功'
+    }
+  }
+
+  /**
+   * @description: 获取项目列表
+   * @param {string} uid
+   * @param {SelectProjectListDto} query
+   * @return {*}
+   */  
   async selectProjectsByIdAndStatus(uid: string, query: SelectProjectListDto) {
     const { team_id, status = ProjectStatus.Active } = query
     await this.teamService.checkTeamPermissionByTeamId(uid, team_id)
@@ -101,8 +131,11 @@ export class ProjectService {
       select: {
         project_id: true,
         name: true,
-        team_id: true,
-        status: true
+        status: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
     })
   }
@@ -113,10 +146,7 @@ export class ProjectService {
    * @return {*}
    */  
   async removeProject(uid: string, projectId: string) {
-    const project = await this.checkTeamPermissionByProjectId(uid, projectId)
-    if(project.status === ProjectStatus.Active) {
-      throw new BadRequestException('项目已归档')
-    }
+    await this.checkTeamPermissionByProjectId(uid, projectId)
 
     await this.prisma.project.update({
       where: {

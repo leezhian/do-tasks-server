@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
-import { UpdateProjectDto } from './dto/update-project.dto';
+import { UpdateProjectDto, UpdateProjectStatusDto } from './dto/update-project.dto';
 import { SelectProjectListDto } from './dto/select-project-list.dto';
 import { UserAuthInfo } from '../auth/auth.decorator';
 
@@ -19,12 +19,17 @@ export class ProjectController {
     return this.projectService.updateProject(uid, projectId, updateProjectDto);
   }
 
+  @Patch('/:projectId/status')
+  updateProjectStatus(@UserAuthInfo('uid') uid: string, @Param('projectId') projectId: string, @Body() updateProjectStatusDto: UpdateProjectStatusDto) {
+    return this.projectService.updateProjectStatus(uid, projectId, updateProjectStatusDto)
+  }
+
   @Get('/list')
   findProjects(@UserAuthInfo('uid') uid: string, @Query() query: SelectProjectListDto) {
     return this.projectService.selectProjectsByIdAndStatus(uid, query);
   }
 
-  @Delete(':projectId')
+  @Delete('/:projectId')
   removeProject(@UserAuthInfo('uid') uid: string, @Param('projectId') projectId: string) {
     return this.projectService.removeProject(uid, projectId);
   }
