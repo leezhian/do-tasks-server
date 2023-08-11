@@ -72,6 +72,8 @@ export class TeamService {
     if (team.creator_id !== uid && !this.isTeamMember(uid, team.members)) {
       throw new ForbiddenException('您没有权限访问该团队')
     }
+
+    return team
   }
 
   /**
@@ -144,6 +146,36 @@ export class TeamService {
       },
       orderBy: {
         createdAt: 'desc'
+      }
+    })
+  }
+
+  /**
+   * @description: 获取团队成员列表
+   * @param {string} uid
+   * @param {string} teamId
+   * @return {*}
+   */  
+  async getTeamMembers(uid: string, teamId: string) {
+    const team = await this.checkTeamPermissionByTeamId(uid, teamId)
+    const memberArr = (team.members ?? '').split(',')
+
+    return this.prisma.user.findMany({
+      where: {
+        status: TeamStatus.Active,
+        OR: [{
+          uid: {
+            in: memberArr,
+          }
+        }, {
+          uid: team.creator_id
+        }]
+      },
+      select: {
+        uid: true,
+        name: true,
+        avatar: true,
+        phone: true
       }
     })
   }

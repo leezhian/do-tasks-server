@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { TeamService } from './team.service';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
@@ -16,6 +16,11 @@ export class TeamController {
   @Get('/list')
   getMyTeamList(@UserAuthInfo('uid') uid: string) {
     return this.teamService.getMyTeamList(uid);
+  }
+
+  @Get('/members')
+  getTeamMembers(@UserAuthInfo('uid') uid: string, @Query('team_id') teamId: string) {
+    return this.teamService.getTeamMembers(uid, teamId);
   }
 
   @Patch('/:teamId')

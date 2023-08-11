@@ -26,7 +26,6 @@ export class ProcessTypeService {
       select: {
         id: true,
         name: true,
-        team_id: true
       }
     })
   }
@@ -48,8 +47,7 @@ export class ProcessTypeService {
       },
       select: {
         id: true,
-        name: true,
-        team_id: true
+        name: true
       }
     })
   }
