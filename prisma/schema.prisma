@@ -70,13 +70,15 @@ model Task {
   start_time      Int
   end_time        Int
   reviewer_ids    String?  @db.VarChar(255) // 审核人id
+  reviewer_status Json?    @db.Json // 审核人状态
   owner_ids       String?  @db.VarChar(255) // 负责人id
+  owner_status    Json?    @db.Json // 负责人状态
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   creator       User        @relation(fields: [creator_id], references: [uid])
   project       Project     @relation(fields: [project_id], references: [project_id])
-  processTypeId ProcessType @relation(fields: [process_type_id], references: [id])
+  process_type ProcessType @relation(fields: [process_type_id], references: [id])
 
   TaskLogs TaskLog[]
 }

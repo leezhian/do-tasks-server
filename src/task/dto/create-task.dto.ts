@@ -8,14 +8,16 @@ export class CreateTaskDto {
   @MaxLength(50)
   @Transform(({ value }) => value.trim())
   title: string
-  @IsUrl()
+  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
   content: string
   @IsNotEmpty()
   @IsString()
   project_id: string
   @IsInt()
   process_type_id: number
-  @IsIn([1,2,3,4])
+  @IsIn([0,1,2,3,4])
   priority?: number = 4
   @IsDateStamp()
   @Type(() => Number)

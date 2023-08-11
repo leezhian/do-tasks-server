@@ -13,6 +13,10 @@ export class CommonService {
    * @return {*}
    */
   upload(file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('文件不存在')
+    }
+
     const { mimetype, size, path } = file
     const [filtType] = splitMime(mimetype)
     const limitFileSize = supportFileConfig[filtType].size

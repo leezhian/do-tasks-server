@@ -27,7 +27,11 @@ export const supportFileConfig = {
   },
   application: {
     size: 10 * 1024 * 1024,
-    mime: ['application/pdf', 'application/msword', 'application/vnd.ms-excel', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'text/plain']
+    mime: ['application/pdf', 'application/msword', 'application/vnd.ms-excel', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.openxmlformats-officedocument.presentationml.presentation']
+  },
+  text: {
+    size: 10 * 1024 * 1024,
+    mime: ['text/plain', 'text/html']
   }
 }
 
