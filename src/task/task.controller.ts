@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestj
 import { TaskService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { SelectTaskDto } from './dto/select-task.dto';
 import { UserAuthInfo } from '../auth/auth.decorator'
 
 @Controller('task')
@@ -14,8 +15,8 @@ export class TaskController {
   }
 
   @Get("/list")
-  findAll(@UserAuthInfo('uid') uid: string, @Query('project_id') projectId: string) {
-    return this.taskService.findAllTasksOfProject(uid, projectId)
+  findAll(@UserAuthInfo('uid') uid: string, @Query() query: SelectTaskDto) {
+    return this.taskService.findAllTasksOfProject(uid, query)
   }
 
   @Get(':task_id')

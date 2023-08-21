@@ -25,7 +25,8 @@ model User {
   updatedAt DateTime @updatedAt
 
   Teams    Team[] // 一个用户可以创建多个团队(外键关联)
-  Tasks    Task[]
+  TasksCreator    Task[]  @relation("creator")
+  TasksReviewer    Task[]  @relation("reviewer")
   TaskLogs TaskLog[]
 }
 
@@ -39,7 +40,7 @@ model Team {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  creator      User          @relation(fields: [creator_id], references: [uid]) // 定义外键，creator外键名
+  creator      User   @relation(fields: [creator_id], references: [uid]) // 定义外键，creator外键名
   Projects     Project[]
   ProcessTypes ProcessType[]
 }
@@ -62,21 +63,21 @@ model Task {
   task_id         String   @unique @default(cuid()) @db.VarChar(30) // 任务id
   title           String   @db.VarChar(50)
   content         String?  @db.VarChar(255) // 详情链接
-  status          Int      @default(1) @db.TinyInt // 1: 正常 0: 禁用
+  status          Int      @default(1) @db.TinyInt // 1: 进行中 0: 禁用 2: 审核中 3: 审核不通过 4: 审核通过
   project_id      String   @db.VarChar(30) // 项目id
   creator_id      String // 创建者id
   process_type_id Int      @db.Int // 流程类型id
   priority        Int?     @default(4) @db.TinyInt // 0: p0 1: p1 2: p2 3: p3 4: p4
   start_time      Int
   end_time        Int
-  reviewer_ids    String?  @db.VarChar(255) // 审核人id
-  reviewer_status Json?    @db.Json // 审核人状态
+  reviewer_id    String   // 审核人id
   owner_ids       String?  @db.VarChar(255) // 负责人id
-  owner_status    Json?    @db.Json // 负责人状态
   createdAt       DateTime @default(now())
+  subtask_ids     String?  @db.VarChar(255) // 子任务id
   updatedAt       DateTime @updatedAt
 
-  creator       User        @relation(fields: [creator_id], references: [uid])
+  creator       User        @relation("creator", fields: [creator_id], references: [uid])
+  reviewer      User       @relation("reviewer", fields: [reviewer_id], references: [uid])
   project       Project     @relation(fields: [project_id], references: [project_id])
   process_type ProcessType @relation(fields: [process_type_id], references: [id])
 

@@ -3,6 +3,7 @@ import { BadRequestException, Injectable, NotFoundException, ForbiddenException 
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { SelectTaskDto } from './dto/select-task.dto';
 import { TaskStatus, ProjectStatus, AccountStatus } from '../helper/constants';
 import { TeamService } from '../team/team.service'
 import { ProjectService } from '../project/project.service'
@@ -64,7 +65,7 @@ export class TaskService {
    * @return {*}
    */
   async create(uid: string, createTaskDto: CreateTaskDto) {
-    const { start_time, end_time, project_id, reviewer_ids, owner_ids } = createTaskDto
+    const { start_time, end_time, project_id } = createTaskDto
     // 判断是否有权限创建任务
     const project = await this.projectService.checkTeamPermissionByProjectId(uid, project_id)
     if (project.status === ProjectStatus.Archive) {
@@ -85,7 +86,7 @@ export class TaskService {
         priority: createTaskDto.priority,
         start_time: start_time,
         end_time: end_time,
-        reviewer_ids: createTaskDto.reviewer_ids,
+        reviewer_id: createTaskDto.reviewer_id,
         owner_ids: createTaskDto.owner_ids,
       },
       select: {
@@ -104,7 +105,7 @@ export class TaskService {
         priority: true,
         start_time: true,
         end_time: true,
-        reviewer_ids: true,
+        reviewer_id: true,
         owner_ids: true,
       }
     })
@@ -113,16 +114,17 @@ export class TaskService {
   /**
    * @description: 获取项目下的所有任务
    * @param {string} uid
-   * @param {string} projectId
+   * @param {SelectTaskDto} query
    * @return {*}
    */
-  async findAllTasksOfProject(uid: string, projectId: string) {
+  async findAllTasksOfProject(uid: string, query: SelectTaskDto) {
+    const { project_id, order_by = 'createdAt', order_method = 'desc' } = query
     // 判断是否有权限查看任务列表
-    await this.projectService.checkTeamPermissionByProjectId(uid, projectId)
+    await this.projectService.checkTeamPermissionByProjectId(uid, project_id)
 
     const tasks = await this.prisma.task.findMany({
       where: {
-        project_id: projectId
+        project_id
       },
       select: {
         task_id: true,
@@ -134,22 +136,29 @@ export class TaskService {
             name: true,
           }
         },
+        reviewer: {
+          select: {
+            uid: true,
+            name: true,
+            avatar: true,
+          }
+        },
         priority: true,
         start_time: true,
         end_time: true,
-        reviewer_ids: true,
         owner_ids: true,
         createdAt: true,
+      },
+      orderBy: {
+        [order_by]: order_method
       }
     })
 
     const threads = tasks.map(async (task) => {
-      const reviewerIds = task.reviewer_ids ? task.reviewer_ids.split(',') : []
       const ownerIds = task.owner_ids ? task.owner_ids.split(',') : []
-      if (!reviewerIds.length && !ownerIds.length) {
+      if (!ownerIds.length) {
         return {
-          ...omit(task, ['reviewer_ids', 'owner_ids']),
-          reviewers: [],
+          ...omit(task, ['owner_ids']),
           owners: []
         }
       }
@@ -157,7 +166,7 @@ export class TaskService {
       const users = await this.prisma.user.findMany({
         where: {
           uid: {
-            in: Array.from(new Set([...reviewerIds, ...ownerIds]))
+            in: Array.from(new Set([...ownerIds]))
           },
           status: AccountStatus.Active
         },
@@ -168,11 +177,11 @@ export class TaskService {
         }
       })
 
-      const reviewers = users.filter(user => reviewerIds.includes(user.uid))
+      // const reviewers = users.filter(user => reviewerIds.includes(user.uid))
       const owners = users.filter(user => ownerIds.includes(user.uid))
       return {
-        ...omit(task, ['reviewer_ids', 'owner_ids']),
-        reviewers,
+        ...omit(task, ['owner_ids']),
+        // reviewers,
         owners
       }
     })
@@ -203,7 +212,7 @@ export class TaskService {
         priority: true,
         start_time: true,
         end_time: true,
-        reviewer_ids: true,
+        reviewer_id: true,
         owner_ids: true,
         createdAt: true,
       }
@@ -240,7 +249,7 @@ export class TaskService {
         priority: updateTaskDto.priority,
         start_time: updateTaskDto.start_time,
         end_time: updateTaskDto.end_time,
-        reviewer_ids: updateTaskDto.reviewer_ids,
+        reviewer_id: updateTaskDto.reviewer_id,
         owner_ids: updateTaskDto.owner_ids,
       }
     })

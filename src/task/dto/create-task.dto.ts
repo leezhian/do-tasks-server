@@ -27,7 +27,7 @@ export class CreateTaskDto {
   end_time: number
   @IsOptional()
   @IsString()
-  reviewer_ids?: string
+  reviewer_id?: string
   @IsOptional()
   @IsString()
   owner_ids?: string

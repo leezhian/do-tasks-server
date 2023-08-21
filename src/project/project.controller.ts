@@ -29,6 +29,11 @@ export class ProjectController {
     return this.projectService.selectProjectsByIdAndStatus(uid, query);
   }
 
+  @Get('/:projectId')
+  findProjectDetail(@UserAuthInfo('uid') uid: string, @Param('projectId') projectId: string) {
+    return this.projectService.selectProjectById(uid, projectId)
+  }
+
   @Delete('/:projectId')
   removeProject(@UserAuthInfo('uid') uid: string, @Param('projectId') projectId: string) {
     return this.projectService.removeProject(uid, projectId);

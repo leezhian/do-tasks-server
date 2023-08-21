@@ -27,7 +27,10 @@ export enum ProcessTypeStatus {
 // 任务状态(待补充)
 export enum TaskStatus {
   Ban,
-  Active,
+  Todo,
+  UnderReview,
+  ReviewFailed,
+  Done,
 }
 
 // 上传文件路径
