@@ -24,10 +24,10 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  Teams    Team[] // 一个用户可以创建多个团队(外键关联)
-  TasksCreator    Task[]  @relation("creator")
-  TasksReviewer    Task[]  @relation("reviewer")
-  TaskLogs TaskLog[]
+  teams          Team[] // 一个用户可以创建多个团队(外键关联)
+  created_tasks  Task[]    @relation("creator")
+  reviewed_tasks Task[]    @relation("reviewer")
+  task_logs      TaskLog[]
 }
 
 model Team {
@@ -40,9 +40,9 @@ model Team {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  creator      User   @relation(fields: [creator_id], references: [uid]) // 定义外键，creator外键名
-  Projects     Project[]
-  ProcessTypes ProcessType[]
+  creator       User          @relation(fields: [creator_id], references: [uid]) // 定义外键，creator外键名
+  projects      Project[]
+  process_types ProcessType[]
 }
 
 model Project {
@@ -55,7 +55,7 @@ model Project {
   updatedAt  DateTime @updatedAt
 
   team  Team   @relation(fields: [team_id], references: [team_id])
-  Tasks Task[]
+  tasks Task[]
 }
 
 model Task {
@@ -70,18 +70,19 @@ model Task {
   priority        Int?     @default(4) @db.TinyInt // 0: p0 1: p1 2: p2 3: p3 4: p4
   start_time      Int
   end_time        Int
-  reviewer_id    String   // 审核人id
+  done_task_time  Int? // 任务完成时间
+  reviewer_id     String // 审核人id
   owner_ids       String?  @db.VarChar(255) // 负责人id
   createdAt       DateTime @default(now())
   subtask_ids     String?  @db.VarChar(255) // 子任务id
   updatedAt       DateTime @updatedAt
 
-  creator       User        @relation("creator", fields: [creator_id], references: [uid])
-  reviewer      User       @relation("reviewer", fields: [reviewer_id], references: [uid])
-  project       Project     @relation(fields: [project_id], references: [project_id])
+  creator      User        @relation("creator", fields: [creator_id], references: [uid])
+  reviewer     User        @relation("reviewer", fields: [reviewer_id], references: [uid])
+  project      Project     @relation(fields: [project_id], references: [project_id])
   process_type ProcessType @relation(fields: [process_type_id], references: [id])
 
-  TaskLogs TaskLog[]
+  task_logs TaskLog[]
 }
 
 model TaskLog {
@@ -104,5 +105,5 @@ model ProcessType {
   updatedAt DateTime @updatedAt
 
   team  Team   @relation(fields: [team_id], references: [team_id])
-  Tasks Task[]
+  tasks Task[]
 }

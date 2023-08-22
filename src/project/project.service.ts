@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { TeamService } from '../team/team.service'
 import { PrismaService } from '../prisma/prisma.service'
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -133,25 +133,28 @@ export class ProjectService {
    */
   async selectProjectById(uid: string, projectId: string) {
     const project = await this.checkTeamPermissionByProjectId(uid, projectId)
-    const taskCount = this.prisma.task.count({
-      where: {
-        project_id: projectId
-      }
-    })
-    const doneTaskCount = this.prisma.task.count({
-      where: {
-        project_id: projectId,
-        status: TaskStatus.Done
-      }
-    })
-
-    const res = await Promise.all([taskCount, doneTaskCount])
+    const [taskCount, doneTaskCount] = await this.prisma.$transaction([
+      this.prisma.task.count({
+        where: {
+          project_id: projectId,
+          status: {
+            not: TaskStatus.Ban
+          }
+        }
+      }),
+      this.prisma.task.count({
+        where: {
+          project_id: projectId,
+          status: TaskStatus.Done
+        }
+      })
+    ])
     
     return {
       ...project,
       task_summary: {
-        total: res[0],
-        done_task_count: res[1]
+        total: taskCount,
+        done_task_count: doneTaskCount
       }
     }
   }
@@ -166,20 +169,67 @@ export class ProjectService {
     const { team_id, status = ProjectStatus.Active } = query
     await this.teamService.checkTeamPermissionByTeamId(uid, team_id)
 
-    
-    return this.prisma.project.findMany({
-      where: {
-        team_id: team_id,
-        status: status as number
-      },
-      select: {
-        project_id: true,
-        name: true,
-        status: true,
-        createdAt: true,
-      },
-      orderBy: {
-        createdAt: 'desc'
+    // remark： 这里待优化，处理方式不太好
+    const [projectList, projectsDoneTaskCount] =  await this.prisma.$transaction([
+      this.prisma.project.findMany({
+        where: {
+          team_id: team_id,
+          status: status as number
+        },
+        select: {
+          project_id: true,
+          name: true,
+          status: true,
+          createdAt: true,
+          _count: {
+            select: {
+              tasks: {
+                where: {
+                  status: {
+                    not: TaskStatus.Ban
+                  }
+                }
+              }
+            }
+          }
+        },
+        orderBy: {
+          createdAt: 'desc'
+        }
+      }),
+      this.prisma.project.findMany({
+        where: {
+          team_id: team_id,
+          status: status as number
+        },
+        select: {
+          _count: {
+            select: {
+              tasks: {
+                where: {
+                  status: TaskStatus.Done
+                }
+              }
+            }
+          }
+        },
+        orderBy: {
+          createdAt: 'desc'
+        }
+      })
+    ])
+
+    if(projectList.length !== projectsDoneTaskCount.length) {
+      throw new InternalServerErrorException('获取项目列表出现错误')
+    }
+
+    return projectList.map((project, index) => {
+      return {
+        ...project,
+        _count: {
+          total: project._count.tasks,
+          done_task_count: projectsDoneTaskCount[index]._count.tasks
+        }
       }
     })
   }
