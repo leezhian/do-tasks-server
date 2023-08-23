@@ -1,3 +1,4 @@
+import { join } from 'node:path'
 import { Injectable } from '@nestjs/common'
 import { BadRequestException } from '@nestjs/common'
 import { supportFileConfig, splitMime } from '../helper/MulterConfigService'
@@ -24,7 +25,8 @@ export class CommonService {
       throw new BadRequestException('上传的文件大小超过限制')
     }
 
-    const fileUrl = path.replace(process.cwd(), '')
+    const fileUrl = path.replace(join(process.cwd(), '/files'), '')
+
     return {
       filename: file.filename,
       url: fileUrl,

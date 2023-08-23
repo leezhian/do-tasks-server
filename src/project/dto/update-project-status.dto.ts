@@ -5,7 +5,7 @@
  */
 import { Type } from "class-transformer"
 import { IsIn } from "class-validator"
-import { ProjectStatus } from "../../helper/constants"
+import { ProjectStatus } from "../../helper/enum"
 
 export class UpdateProjectStatusDto {
   @Type(() => Number)

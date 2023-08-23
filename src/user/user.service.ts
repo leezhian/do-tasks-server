@@ -4,7 +4,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import type { UserInfo } from '../typings/user';
-import { AccountStatus } from '../helper/constants'
+import { AccountStatus } from '../helper/enum'
 
 @Injectable()
 export class UserService {

@@ -3,7 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { TeamService } from '../team/team.service';
 import { CreateProcessTypeDto } from './dto/create-process-type.dto';
 import { SelectProcessTypesDto } from './dto/select-process-types.dto';
-import { ProcessTypeStatus } from '../helper/constants';
+import { ProcessTypeStatus } from '../helper/enum';
 
 @Injectable()
 export class ProcessTypeService {

@@ -4,7 +4,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { SelectTaskDto } from './dto/select-task.dto';
-import { TaskStatus, ProjectStatus, AccountStatus } from '../helper/constants';
+import { TaskStatus, ProjectStatus, AccountStatus } from '../helper/enum'
+import { filePathDomain } from '../helper/constants'
 import { TeamService } from '../team/team.service'
 import { ProjectService } from '../project/project.service'
 
@@ -129,6 +130,7 @@ export class TaskService {
       select: {
         task_id: true,
         title: true,
+        content: true,
         status: true,
         process_type: {
           select: {
@@ -156,9 +158,14 @@ export class TaskService {
 
     const threads = tasks.map(async (task) => {
       const ownerIds = task.owner_ids ? task.owner_ids.split(',') : []
+      const restTaskInfo = {
+        ...omit(task, ['owner_ids']),
+        content: task.content ? `${filePathDomain}${task.content}` : task.content
+      }
+
       if (!ownerIds.length) {
         return {
-          ...omit(task, ['owner_ids']),
+          ...restTaskInfo,
           owners: []
         }
       }
@@ -177,11 +184,9 @@ export class TaskService {
         }
       })
 
-      // const reviewers = users.filter(user => reviewerIds.includes(user.uid))
       const owners = users.filter(user => ownerIds.includes(user.uid))
       return {
-        ...omit(task, ['owner_ids']),
-        // reviewers,
+        ...restTaskInfo,
         owners
       }
     })
@@ -191,7 +196,7 @@ export class TaskService {
   }
 
   /**
-   * @description: 获取任务详情
+   * @description: 获取任务详情(因为目前数据字段还是比较少，暂时不用)
    * @param {string} uid
    * @param {string} taskId
    * @return {*}

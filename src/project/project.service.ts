@@ -4,7 +4,7 @@ import { PrismaService } from '../prisma/prisma.service'
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto, UpdateProjectStatusDto } from './dto/update-project.dto';
 import { SelectProjectListDto } from './dto/select-project-list.dto';
-import { ProjectStatus, TaskStatus } from '../helper/constants'
+import { ProjectStatus, TaskStatus } from '../helper/enum'
 
 @Injectable()
 export class ProjectService {

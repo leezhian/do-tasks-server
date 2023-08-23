@@ -58,8 +58,11 @@ pnpm start
   -main.ts // 主入口
 ```
 
-*上传的文件是放在 根目录 files 文件夹*
 
+**上传说明**
+
+默认上传存放的路径是根目录 `files` 文件夹。
+可以通过修改 `/helper/constants.ts` 文件中的 `uploadPath` 和 `filePathDomain` 来修改上传路径和文件访问域名。
 
 
 *TODO API文档补充*

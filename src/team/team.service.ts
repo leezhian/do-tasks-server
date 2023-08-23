@@ -2,7 +2,7 @@ import { BadRequestException, ForbiddenException, NotFoundException, Injectable 
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
 import { PrismaService } from '../prisma/prisma.service'
-import { TeamStatus } from '../helper/constants'
+import { TeamStatus } from '../helper/enum'
 
 @Injectable()
 export class TeamService {
