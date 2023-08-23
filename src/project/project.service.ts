@@ -38,7 +38,6 @@ export class ProjectService {
     })
 
     if (!projectWithTeam || projectWithTeam.status === ProjectStatus.Ban) {
-      console.log('projectWithTeam', projectWithTeam)
       throw new NotFoundException('项目不存在')
     }
 

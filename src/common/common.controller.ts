@@ -1,4 +1,4 @@
-import { Controller, Post, Get, UploadedFile, UseInterceptors, Query } from '@nestjs/common';
+import { Controller, Post, Get, UploadedFile, UseInterceptors, Query, HttpCode } from '@nestjs/common';
 import { CommonService } from './common.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SearchDto } from './dto/search.dto';
@@ -15,6 +15,7 @@ export class CommonController {
   }
 
   @Get('/search')
+  @HttpCode(200)
   search(@UserAuthInfo('uid') uid: string, @Query() query: SearchDto) {
     return this.commonService.search(uid, query)
   }

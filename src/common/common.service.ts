@@ -4,6 +4,7 @@ import { BadRequestException } from '@nestjs/common'
 import { supportFileConfig, splitMime } from '../helper/MulterConfigService'
 import { SearchDto } from './dto/search.dto'
 import { PrismaService } from '../prisma/prisma.service'
+import { TaskStatus } from '../helper/enum'
 
 @Injectable()
 export class CommonService {
@@ -41,26 +42,28 @@ export class CommonService {
    * @param {SearchDto} query
    * @return {*}
    */
-  search(uid: string, query: SearchDto) {
-    const { keyword, type } = query
+  async search(uid: string, query: SearchDto) {
+    const { keyword, type, limit = 20 } = query
 
     let sql = ''
     if (!type || type === '1') {
-      sql += `select team_id as id, name, '1' as type from Team where name like '%${keyword}%' and (creator_id = '${uid}' or members like '%${uid}%')`
+      sql += `select project_id as id, Project.name, null as task_id, project_id, Project.team_id, '1' as type from Project join Team where Project.name like '%${keyword}%' and (Team.creator_id = '${uid}' or Team.members like '%${uid}%')`
     }
 
     if (!type || type === '2') {
       if (sql) {
         sql += ' union all '
       }
-      sql += `select task_id as id, title as name, '2' as type from Task join Project join Team where title like '%${keyword}%' and Task.project_id = Project.project_id and Project.team_id = Team.team_id and (Team.creator_id = '${uid}' or Team.members like '%${uid}%')`
+      // , Task.project_id, Project.team_id
+      sql += `select task_id as id, title as name, task_id, Project.project_id, Project.team_id, '2' as type from Task join Project join Team where title like '%${keyword}%' and Task.status != ${TaskStatus.Ban} and Task.project_id = Project.project_id and Project.team_id = Team.team_id and (Team.creator_id = '${uid}' or Team.members like '%${uid}%')`
     }
 
     if (!type) {
       sql = `(${sql})`
     }
 
-    sql += ' limit 20;'
+    sql += ` limit ${limit};`
+
     return this.prisma.$queryRawUnsafe(sql)
   }
 }
