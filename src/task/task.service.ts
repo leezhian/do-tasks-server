@@ -113,6 +113,60 @@ export class TaskService {
   }
 
   /**
+   * @description: 计算任务列表的查询条件
+   * @param {string} uid
+   * @param {SelectTaskDto} query
+   * @return {*}
+   */  
+  private computedSelectConditionOfList(uid: string, query: SelectTaskDto) {
+    const { project_id, object, status } = query
+    let selectCondition: any = {
+      project_id,
+      status: {
+        not: TaskStatus.Ban
+      }
+    }
+
+    /*
+      remark 0表示查询所有的，1表示只查询自己的
+      status 1实际表示查询 1和 3的， 因为 3 时审核不通过，即需要返回来重做，其余的都是查询自己的
+      当object为1时，status为1，需要额外条件 owner_ids（负责人）需要包含自己 uid；status为2时，需要额外条件 owner_ids（负责人）需要包含自己 uid 或者 reviewer_id（审核人）为自己 uid，即自己负责的或者自己审核的。status为3时与 2 一样。
+    */
+
+    // 表示只查询自己的
+    if (object === 1) {
+      if(status === TaskStatus.Todo) {
+        selectCondition.owner_ids = {
+          contains: uid
+        }
+      } else {
+        selectCondition['OR'] = [
+          {
+            owner_ids: {
+              contains: uid
+            }
+          },
+          {
+            reviewer_id: uid
+          }
+        ]
+
+      }
+    }
+
+    // 进行中，包括待处理和审核不通过
+    if (status === TaskStatus.Todo) {
+      selectCondition.status = {
+        in: [TaskStatus.Todo, TaskStatus.ReviewFailed]
+      }
+    } else {
+      selectCondition.status = status
+    }
+
+    return selectCondition
+  }
+
+  /**
    * @description: 获取项目下的所有任务
    * @param {string} uid
    * @param {SelectTaskDto} query
@@ -123,9 +177,12 @@ export class TaskService {
     // 判断是否有权限查看任务列表
     await this.projectService.checkTeamPermissionByProjectId(uid, project_id)
 
+    const selectCondition = this.computedSelectConditionOfList(uid, query)
+    console.log('selectCondition', selectCondition)
+
     const tasks = await this.prisma.task.findMany({
       where: {
-        project_id
+        ...selectCondition
       },
       select: {
         task_id: true,
