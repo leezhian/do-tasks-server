@@ -178,8 +178,6 @@ export class TaskService {
     await this.projectService.checkTeamPermissionByProjectId(uid, project_id)
 
     const selectCondition = this.computedSelectConditionOfList(uid, query)
-    console.log('selectCondition', selectCondition)
-
     const tasks = await this.prisma.task.findMany({
       where: {
         ...selectCondition
