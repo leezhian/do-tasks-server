@@ -3,6 +3,7 @@ import { BadRequestException, Injectable, NotFoundException, ForbiddenException 
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
 import { SelectTaskDto } from './dto/select-task.dto';
 import { TaskStatus, ProjectStatus, AccountStatus } from '../helper/enum'
 import { filePathDomain } from '../helper/constants'
@@ -311,6 +312,39 @@ export class TaskService {
         end_time: updateTaskDto.end_time,
         reviewer_id: updateTaskDto.reviewer_id,
         owner_ids: updateTaskDto.owner_ids,
+      }
+    })
+
+    return {
+      code: 200,
+      message: '更新成功'
+    }
+  }
+
+  /**
+   * @description: 更新任务状态
+   * @param {string} uid
+   * @param {string} taskId
+   * @param {UpdateTaskStatusDto} updateTaskStatusDto
+   * @return {*}
+   */  
+  async updateTaskStatus(uid: string, taskId: string, updateTaskStatusDto: UpdateTaskStatusDto) {
+    const { status } = updateTaskStatusDto
+    // 判断是否有权限查看任务详情
+    const task = await this.checkTeamPermissionByTaskId(uid, taskId)
+    const { status : currentTaskStatus } = task
+
+    // 表示非审核中状态，越级修改状态提示报错
+    if(currentTaskStatus !== TaskStatus.UnderReview && status > currentTaskStatus + 1) {
+      throw new BadRequestException('禁止越级修改任务状态')
+    }
+    
+    await this.prisma.task.update({
+      where: {
+        task_id: taskId
+      },
+      data: {
+        status
       }
     })
 

@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Put } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { SelectTaskDto } from './dto/select-task.dto';
+import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
 import { UserAuthInfo } from '../auth/auth.decorator'
 
 @Controller('task')
@@ -27,6 +28,11 @@ export class TaskController {
   @Patch(':task_id')
   update(@UserAuthInfo('uid') uid: string, @Param('task_id') taskId: string, @Body() updateTaskDto: UpdateTaskDto) {
     return this.taskService.update(uid, taskId, updateTaskDto);
+  }
+
+  @Patch(':task_id/status')
+  updateStatus(@UserAuthInfo('uid') uid: string, @Param('task_id') taskId: string, @Body() updateTaskStatusDto: UpdateTaskStatusDto) {
+    return this.taskService.updateTaskStatus(uid, taskId, updateTaskStatusDto);
   }
 
   @Delete(':task_id')
