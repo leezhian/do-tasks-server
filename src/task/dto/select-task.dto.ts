@@ -4,7 +4,7 @@
  * @Description: 查询任务列表
  */
 import { Type } from "class-transformer"
-import { IsNotEmpty, IsString, IsOptional, IsIn, IsEnum, IsNumberString, IsInt } from "class-validator"
+import { IsNotEmpty, IsString, IsOptional, IsIn, IsEnum, IsInt } from "class-validator"
 import { TaskStatus } from "../../helper/enum"
 
 export class SelectTaskDto {
@@ -25,4 +25,12 @@ export class SelectTaskDto {
   @Type(() => Number)
   @IsIn([0, 1])
   object?: number
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  page?: number
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  page_size?: number
 }

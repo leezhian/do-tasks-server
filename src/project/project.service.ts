@@ -58,7 +58,7 @@ export class ProjectService {
     const { team_id } = createProjectDto
     await this.teamService.checkTeamPermissionByTeamId(uid, team_id)
 
-    return this.prisma.project.create({
+    const project = await this.prisma.project.create({
       data: {
         name: createProjectDto.name,
         team_id: team_id
@@ -69,6 +69,14 @@ export class ProjectService {
         status: true,
       }
     })
+
+    return {
+      ...project,
+      _count: {
+        total: 0,
+        done_task_count: 0
+      }
+    }
   }
 
   /**

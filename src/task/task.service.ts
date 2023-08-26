@@ -174,43 +174,54 @@ export class TaskService {
    * @return {*}
    */
   async findAllTasksOfProject(uid: string, query: SelectTaskDto) {
-    const { project_id, order_by = 'createdAt', order_method = 'desc' } = query
+    const { project_id, order_by = 'createdAt', order_method = 'desc', page = 1, page_size = 20 } = query
     // 判断是否有权限查看任务列表
     await this.projectService.checkTeamPermissionByProjectId(uid, project_id)
 
     const selectCondition = this.computedSelectConditionOfList(uid, query)
-    const tasks = await this.prisma.task.findMany({
-      where: {
-        ...selectCondition
-      },
-      select: {
-        task_id: true,
-        title: true,
-        content: true,
-        status: true,
-        process_type: {
-          select: {
-            id: true,
-            name: true,
-          }
+
+    const [tasks, tasksToast] = await this.prisma.$transaction([
+      this.prisma.task.findMany({
+        where: {
+          ...selectCondition
         },
-        reviewer: {
-          select: {
-            uid: true,
-            name: true,
-            avatar: true,
-          }
+        skip: (page - 1) * page_size,
+        take: page_size,
+        select: {
+          task_id: true,
+          title: true,
+          content: true,
+          status: true,
+          process_type: {
+            select: {
+              id: true,
+              name: true,
+            }
+          },
+          reviewer: {
+            select: {
+              uid: true,
+              name: true,
+              avatar: true,
+            }
+          },
+          priority: true,
+          start_time: true,
+          end_time: true,
+          owner_ids: true,
+          createdAt: true,
+          _count: true
         },
-        priority: true,
-        start_time: true,
-        end_time: true,
-        owner_ids: true,
-        createdAt: true,
-      },
-      orderBy: {
-        [order_by]: order_method
-      }
-    })
+        orderBy: {
+          [order_by]: order_method
+        }
+      }),
+      this.prisma.task.count({
+        where: {
+          ...selectCondition
+        }
+      })
+    ])
 
     const threads = tasks.map(async (task) => {
       const ownerIds = task.owner_ids ? task.owner_ids.split(',') : []
@@ -248,7 +259,10 @@ export class TaskService {
     })
 
     const res = await Promise.all(threads)
-    return res
+    return {
+      list: res,
+      total: tasksToast
+    }
   }
 
   /**

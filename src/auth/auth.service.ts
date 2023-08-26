@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt'
 import { omit } from 'lodash'
 import { UserService } from '../user/user.service';
@@ -17,6 +17,10 @@ export class AuthService {
    */  
   async loginOrRegister(payload: AuthDto) {
     const { phone, password } = payload
+    if(!/^1[3-9]\d{9}$/.test(phone)) {
+      throw new BadRequestException('手机号格式错误')
+    }
+
     let userInfo: UserInfo = await this.userService.getUserInfoByPhone(phone)
 
     if (userInfo) {
