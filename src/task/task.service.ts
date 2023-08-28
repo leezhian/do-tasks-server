@@ -1,5 +1,6 @@
 import { omit } from 'lodash';
 import { BadRequestException, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import * as dayjs from 'dayjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
@@ -301,7 +302,7 @@ export class TaskService {
    * @param {UpdateTaskDto} updateTaskDto
    * @return {*}
    */
-  async update(uid: string, taskId: string, updateTaskDto: UpdateTaskDto) {
+  async updateTask(uid: string, taskId: string, updateTaskDto: UpdateTaskDto) {
     // 判断是否有权限更新任务
     const task = await this.checkTeamPermissionByTaskId(uid, taskId)
     if (task.project.status === ProjectStatus.Archive) {
@@ -352,14 +353,24 @@ export class TaskService {
     if(currentTaskStatus !== TaskStatus.UnderReview && status > currentTaskStatus + 1) {
       throw new BadRequestException('禁止越级修改任务状态')
     }
+
+    let updateData = {
+      status
+    }
+
+    if (status === TaskStatus.UnderReview) {
+      // 更新为审核中时，表示任务已经完成，需记录完成时间
+      updateData['done_task_time'] = dayjs().unix()
+    } else if (status === TaskStatus.Done) {
+      // 记录审核通过时间
+      updateData['approved_task_time'] = dayjs().unix()
+    }
     
     await this.prisma.task.update({
       where: {
         task_id: taskId
       },
-      data: {
-        status
-      }
+      data: updateData
     })
 
     return {
@@ -380,7 +391,6 @@ export class TaskService {
     if (task.project.status === ProjectStatus.Archive) {
       throw new BadRequestException('项目已归档，无法更新任务')
     }
-
 
     await this.prisma.task.update({
       where: {

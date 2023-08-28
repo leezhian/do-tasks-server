@@ -29,6 +29,11 @@ export class ProjectController {
     return this.projectService.selectProjectsByIdAndStatus(uid, query);
   }
 
+  @Get('/:projectId/task-status-summary')
+  getTaskStautsSummary(@UserAuthInfo('uid') uid: string, @Param('projectId') projectId: string) {
+    return this.projectService.getTaskStautsSummary(uid, projectId)
+  }
+
   @Get('/:projectId')
   findProjectDetail(@UserAuthInfo('uid') uid: string, @Param('projectId') projectId: string) {
     return this.projectService.selectProjectById(uid, projectId)

@@ -1,10 +1,12 @@
 import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import * as dayjs from 'dayjs';
 import { TeamService } from '../team/team.service'
 import { PrismaService } from '../prisma/prisma.service'
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto, UpdateProjectStatusDto } from './dto/update-project.dto';
 import { SelectProjectListDto } from './dto/select-project-list.dto';
 import { ProjectStatus, TaskStatus } from '../helper/enum'
+import { TaskDoneAndApprovedSummary } from '../typings/project'
 
 @Injectable()
 export class ProjectService {
@@ -156,7 +158,7 @@ export class ProjectService {
         }
       })
     ])
-    
+
     return {
       ...project,
       task_summary: {
@@ -177,7 +179,7 @@ export class ProjectService {
     await this.teamService.checkTeamPermissionByTeamId(uid, team_id)
 
     // remark： 这里待优化，处理方式不太好
-    const [projectList, projectsDoneTaskCount] =  await this.prisma.$transaction([
+    const [projectList, projectsDoneTaskCount] = await this.prisma.$transaction([
       this.prisma.project.findMany({
         where: {
           team_id: team_id,
@@ -226,7 +228,7 @@ export class ProjectService {
       })
     ])
 
-    if(projectList.length !== projectsDoneTaskCount.length) {
+    if (projectList.length !== projectsDoneTaskCount.length) {
       throw new InternalServerErrorException('获取项目列表出现错误')
     }
 
@@ -239,6 +241,38 @@ export class ProjectService {
         }
       }
     })
+  }
+
+  /**
+   * @description: 获取每日完成任务数量
+   * @param {string} uid 用户id
+   * @param {string} projectId 项目id
+   * @return {*}
+   */
+  async getTaskStautsSummary(uid: string, projectId: string) {
+    await this.checkTeamPermissionByProjectId(uid, projectId)
+
+    // remark: count 查询后会返回BigInt，即{count: 1n}，导致无法正常序列化， https://github.com/prisma/prisma/discussions/14863 和 https://github.com/prisma/prisma/issues/14613
+    const [selectDoneCount, selectApprovedCount]: [TaskDoneAndApprovedSummary[], TaskDoneAndApprovedSummary[]] = await this.prisma.$transaction([
+      this.prisma.$queryRaw`SELECT FROM_UNIXTIME(done_task_time, '%Y-%m-%d') AS day, COUNT(task_id) as done_count from Task WHERE (done_task_time BETWEEN ${dayjs().subtract(6, 'day').startOf('date').unix()} AND ${dayjs().endOf('date').unix()}) GROUP BY day`,
+      this.prisma.$queryRaw`SELECT FROM_UNIXTIME(approved_task_time, '%Y-%m-%d') AS day, COUNT(task_id) as approved_count from Task WHERE (approved_task_time BETWEEN ${dayjs().subtract(6, 'day').startOf('date').unix()} AND ${dayjs().endOf('date').unix()}) GROUP BY day`,
+    ])
+
+    const result: TaskDoneAndApprovedSummary[] = []
+    for (let index = 6; index >= 0; index--) {
+      const day = dayjs().subtract(index, 'day').format('YYYY-MM-DD')
+      
+      const doneTarget = selectDoneCount.find(item => item.day === day) || { done_count: 0 }
+      const approvedTarget = selectApprovedCount.find(item => item.day === day) || { approved_count: 0 }
+      
+      result.push({
+        day,
+        done_count: Number(doneTarget.done_count),
+        approved_count:  Number(approvedTarget.approved_count)
+      })
+    }
+
+    return result
   }
 
   /**

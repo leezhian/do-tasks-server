@@ -71,6 +71,7 @@ model Task {
   start_time      Int
   end_time        Int
   done_task_time  Int? // 任务完成时间
+  approved_task_time Int? // 任务审核通过时间
   reviewer_id     String // 审核人id
   owner_ids       String?  @db.VarChar(255) // 负责人id
   createdAt       DateTime @default(now())

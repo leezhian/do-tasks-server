@@ -26,8 +26,8 @@ export class TaskController {
   }
 
   @Patch(':task_id')
-  update(@UserAuthInfo('uid') uid: string, @Param('task_id') taskId: string, @Body() updateTaskDto: UpdateTaskDto) {
-    return this.taskService.update(uid, taskId, updateTaskDto);
+  updateTask(@UserAuthInfo('uid') uid: string, @Param('task_id') taskId: string, @Body() updateTaskDto: UpdateTaskDto) {
+    return this.taskService.updateTask(uid, taskId, updateTaskDto);
   }
 
   @Patch(':task_id/status')
