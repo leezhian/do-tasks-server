@@ -5,6 +5,5 @@
  */
 export interface TaskDoneAndApprovedSummary {
   day: string
-  done_count?: number
-  approved_count?: number
+  count: number
 }

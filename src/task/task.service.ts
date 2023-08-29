@@ -361,9 +361,9 @@ export class TaskService {
     if (status === TaskStatus.UnderReview) {
       // 更新为审核中时，表示任务已经完成，需记录完成时间
       updateData['done_task_time'] = dayjs().unix()
-    } else if (status === TaskStatus.Done) {
+    } else if (status === TaskStatus.ReviewFailed || status === TaskStatus.Done) {
       // 记录审核通过时间
-      updateData['approved_task_time'] = dayjs().unix()
+      updateData['review_time'] = dayjs().unix()
     }
     
     await this.prisma.task.update({

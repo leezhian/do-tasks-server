@@ -3,6 +3,7 @@ import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto, UpdateProjectStatusDto } from './dto/update-project.dto';
 import { SelectProjectListDto } from './dto/select-project-list.dto';
+import { SelectTaskStatusSummaryDto } from './dto/select-task-summary.dto';
 import { UserAuthInfo } from '../auth/auth.decorator';
 
 @Controller('project')
@@ -30,8 +31,13 @@ export class ProjectController {
   }
 
   @Get('/:projectId/task-status-summary')
-  getTaskStautsSummary(@UserAuthInfo('uid') uid: string, @Param('projectId') projectId: string) {
-    return this.projectService.getTaskStautsSummary(uid, projectId)
+  getTaskStautsSummary(@UserAuthInfo('uid') uid: string, @Param('projectId') projectId: string, @Query() query: SelectTaskStatusSummaryDto) {
+    return this.projectService.getTaskStautsSummary(uid, projectId, query)
+  }
+
+  @Get('/:projectId/user-task-stat')
+  getUserTaskStat(@UserAuthInfo('uid') uid: string, @Param('projectId') projectId: string) {
+    return this.projectService.getUserTaskStat(uid, projectId)
   }
 
   @Get('/:projectId')

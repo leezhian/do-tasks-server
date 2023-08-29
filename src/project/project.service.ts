@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service'
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto, UpdateProjectStatusDto } from './dto/update-project.dto';
 import { SelectProjectListDto } from './dto/select-project-list.dto';
+import { SelectTaskStatusSummaryDto } from './dto/select-task-summary.dto';
 import { ProjectStatus, TaskStatus } from '../helper/enum'
 import { TaskDoneAndApprovedSummary } from '../typings/project'
 
@@ -249,30 +250,98 @@ export class ProjectService {
    * @param {string} projectId 项目id
    * @return {*}
    */
-  async getTaskStautsSummary(uid: string, projectId: string) {
+  async getTaskStautsSummary(uid: string, projectId: string, query: SelectTaskStatusSummaryDto) {
     await this.checkTeamPermissionByProjectId(uid, projectId)
+    const { object = 0 } = query
 
     // remark: count 查询后会返回BigInt，即{count: 1n}，导致无法正常序列化， https://github.com/prisma/prisma/discussions/14863 和 https://github.com/prisma/prisma/issues/14613
     const [selectDoneCount, selectApprovedCount]: [TaskDoneAndApprovedSummary[], TaskDoneAndApprovedSummary[]] = await this.prisma.$transaction([
-      this.prisma.$queryRaw`SELECT FROM_UNIXTIME(done_task_time, '%Y-%m-%d') AS day, COUNT(task_id) as done_count from Task WHERE (done_task_time BETWEEN ${dayjs().subtract(6, 'day').startOf('date').unix()} AND ${dayjs().endOf('date').unix()}) GROUP BY day`,
-      this.prisma.$queryRaw`SELECT FROM_UNIXTIME(approved_task_time, '%Y-%m-%d') AS day, COUNT(task_id) as approved_count from Task WHERE (approved_task_time BETWEEN ${dayjs().subtract(6, 'day').startOf('date').unix()} AND ${dayjs().endOf('date').unix()}) GROUP BY day`,
+      this.prisma.$queryRawUnsafe(`SELECT FROM_UNIXTIME(done_task_time, '%Y-%m-%d') AS day, COUNT(task_id) as count, 'done_task' as type from Task WHERE (done_task_time BETWEEN ${dayjs().subtract(6, 'day').startOf('date').unix()} AND ${dayjs().endOf('date').unix()}) ${object ? `AND (owner_ids LIKE '%${uid}%')` : ''} GROUP BY day`),
+      this.prisma.$queryRawUnsafe(`SELECT FROM_UNIXTIME(review_time, '%Y-%m-%d') AS day, COUNT(task_id) as count , 'approved_task' as type from Task WHERE (review_time BETWEEN ${dayjs().subtract(6, 'day').startOf('date').unix()} AND ${dayjs().endOf('date').unix()}) ${object ? `AND (reviewer_id = '${uid}')` : ''} GROUP BY day`),
     ])
 
     const result: TaskDoneAndApprovedSummary[] = []
     for (let index = 6; index >= 0; index--) {
       const day = dayjs().subtract(index, 'day').format('YYYY-MM-DD')
-      
-      const doneTarget = selectDoneCount.find(item => item.day === day) || { done_count: 0 }
-      const approvedTarget = selectApprovedCount.find(item => item.day === day) || { approved_count: 0 }
-      
+
+      const doneTarget = selectDoneCount.find(item => item.day === day) || { day, type: 'done_task', count: 0 }
+      const approvedTarget = selectApprovedCount.find(item => item.day === day) || { day, type: 'approved_task', count: 0 }
+
       result.push({
-        day,
-        done_count: Number(doneTarget.done_count),
-        approved_count:  Number(approvedTarget.approved_count)
+        ...doneTarget,
+        count: Number(doneTarget.count)
+      })
+      result.push({
+        ...approvedTarget,
+        count: Number(approvedTarget.count)
       })
     }
 
     return result
+  }
+
+  /**
+   * @description: 获取用户任务汇总
+   * @param {string} uid
+   * @param {string} projectId
+   * @return {*}
+   */  
+  async getUserTaskStat(uid: string, projectId: string) {
+    await this.checkTeamPermissionByProjectId(uid, projectId)
+
+    const [doneCount, reviewedCount, needDoneCount, neewReviewCount] = await this.prisma.$transaction([
+      this.prisma.task.count({
+        where: {
+          project_id: projectId,
+          owner_ids: {
+            contains: uid
+          },
+          OR: [
+            {
+              status: TaskStatus.UnderReview,
+            },
+            {
+              status: TaskStatus.Done,
+            }
+          ]
+        }
+      }),
+      this.prisma.task.count({
+        where: {
+          project_id: projectId,
+          reviewer_id: uid,
+          OR: [
+            {
+              status: TaskStatus.ReviewFailed,
+            },
+            {
+              status: TaskStatus.Done,
+            }
+          ]
+        }
+      }),
+      this.prisma.task.count({
+        where: {
+          project_id: projectId,
+          owner_ids: {
+            contains: uid
+          }
+        }
+      }),
+      this.prisma.task.count({
+        where: {
+          project_id: projectId,
+          reviewer_id: uid,
+        }
+      }),
+    ])
+    
+    return {
+      done_count: doneCount,
+      reviewed_count: reviewedCount,
+      need_done_count: needDoneCount,
+      need_review_count: neewReviewCount
+    }
   }
 
   /**
