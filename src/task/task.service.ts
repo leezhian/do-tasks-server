@@ -314,7 +314,7 @@ export class TaskService {
       throw new BadRequestException('结束时间不能小于开始时间')
     }
 
-    this.prisma.task.update({
+    await this.prisma.task.update({
       where: {
         task_id: taskId
       },
