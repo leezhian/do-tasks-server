@@ -276,23 +276,63 @@ export class TaskService {
     // 判断是否有权限查看任务详情
     await this.checkTeamPermissionByTaskId(uid, taskId)
 
-    return this.prisma.task.findUnique({
+    let task = await this.prisma.task.findUnique({
       where: {
         task_id: taskId
       },
       select: {
         task_id: true,
         title: true,
+        content: true,
         status: true,
-        process_type_id: true,
+        process_type: {
+          select: {
+            id: true,
+            name: true,
+          }
+        },
+        reviewer: {
+          select: {
+            uid: true,
+            name: true,
+            avatar: true,
+          }
+        },
         priority: true,
         start_time: true,
         end_time: true,
-        reviewer_id: true,
         owner_ids: true,
         createdAt: true,
       }
     })
+
+    if(task.owner_ids) {
+      const ownerIds = task.owner_ids.split(',')
+      const owners = await this.prisma.user.findMany({
+        where: {
+          uid: {
+            in: Array.from(new Set([...ownerIds]))
+          },
+          status: AccountStatus.Active
+        },
+        select: {
+          uid: true,
+          name: true,
+          avatar: true,
+        }
+      })
+
+      task = {
+        ...omit(task, ['owner_ids']),
+        owners
+      }
+    }
+
+    if(task.content) {
+      task.content = `${filePathDomain}${task.content}`
+    }
+
+    return task
   }
 
   /**
