@@ -24,10 +24,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  teams          Team[] // 一个用户可以创建多个团队(外键关联)
-  created_tasks  Task[]    @relation("creator")
-  reviewed_tasks Task[]    @relation("reviewer")
-  task_logs      TaskLog[]
+  teams             Team[] // 一个用户可以创建多个团队(外键关联)
+  created_tasks     Task[]    @relation("creator")
+  reviewed_tasks    Task[]    @relation("reviewer")
+  edit_task_logs    TaskLog[] @relation("log_editor")
+  receive_task_logs TaskLog[] @relation("log_receiver")
 }
 
 model Team {
@@ -54,8 +55,9 @@ model Project {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  team  Team   @relation(fields: [team_id], references: [team_id])
-  tasks Task[]
+  team     Team      @relation(fields: [team_id], references: [team_id])
+  tasks    Task[]
+  taskLogs TaskLog[]
 }
 
 model Task {
@@ -87,14 +89,19 @@ model Task {
 }
 
 model TaskLog {
-  id        Int      @id @default(autoincrement())
-  task_id   String   @db.VarChar(30) // 任务id 0: 删除 1: 创建 2: 修改  3: 完成 4: 取消完成 5: 审核通过 6: 审核不通过 （审核通过代表任务正式完成）
-  type      Int      @db.TinyInt // 任务日志类型
-  editor_id String // 编辑者id
-  createdAt DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  task_id     String   @db.VarChar(30)
+  project_id  String   @db.VarChar(30) // 项目id
+  type        Int      @db.TinyInt // 任务日志类型 0: 删除 1: 创建 2: 修改
+  status      Int      @default(0) @db.TinyInt // 0 未读， 1 已读
+  editor_id   String // 编辑者id
+  receiver_id String // 接收者
+  createdAt   DateTime @default(now())
 
-  editor User @relation(fields: [editor_id], references: [uid])
-  task   Task @relation(fields: [task_id], references: [task_id])
+  editor   User    @relation("log_editor", fields: [editor_id], references: [uid])
+  receiver User    @relation("log_receiver", fields: [receiver_id], references: [uid])
+  task     Task    @relation(fields: [task_id], references: [task_id])
+  project  Project @relation(fields: [project_id], references: [project_id])
 }
 
 model ProcessType {

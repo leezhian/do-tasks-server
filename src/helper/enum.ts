@@ -31,3 +31,10 @@ export enum TaskStatus {
   ReviewFailed,
   Done,
 }
+
+// 任务日志类型
+export enum TaskLogType {
+  Delete,
+  Create,
+  Update
+}

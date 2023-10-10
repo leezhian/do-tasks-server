@@ -6,7 +6,7 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
 import { SelectTaskDto } from './dto/select-task.dto';
-import { TaskStatus, ProjectStatus, AccountStatus } from '../helper/enum'
+import { TaskStatus, ProjectStatus, AccountStatus, TaskLogType } from '../helper/enum'
 import { filePathDomain } from '../helper/constants'
 import { TeamService } from '../team/team.service'
 import { ProjectService } from '../project/project.service'
@@ -79,6 +79,8 @@ export class TaskService {
       throw new BadRequestException('结束时间不能小于开始时间')
     }
 
+    const receiverIds = new Set([createTaskDto.reviewer_id].concat((createTaskDto.owner_ids ?? '').split(',')).filter(id => !!id))
+
     return this.prisma.task.create({
       data: {
         title: createTaskDto.title,
@@ -91,6 +93,16 @@ export class TaskService {
         end_time: end_time,
         reviewer_id: createTaskDto.reviewer_id,
         owner_ids: createTaskDto.owner_ids,
+        task_logs: {
+          create: Array.from(receiverIds).map(receiverId => (
+            {
+              project_id,
+              type: TaskLogType.Create,
+              editor_id: uid,
+              receiver_id: receiverId
+            }
+          ))
+        }
       },
       select: {
         task_id: true,
@@ -119,7 +131,7 @@ export class TaskService {
    * @param {string} uid
    * @param {SelectTaskDto} query
    * @return {*}
-   */  
+   */
   private computedSelectConditionOfList(uid: string, query: SelectTaskDto) {
     const { project_id, object, status } = query
     let selectCondition: any = {
@@ -137,7 +149,7 @@ export class TaskService {
 
     // 表示只查询自己的
     if (object === 1) {
-      if(status === TaskStatus.Todo) {
+      if (status === TaskStatus.Todo) {
         selectCondition.owner_ids = {
           contains: uid
         }
@@ -306,7 +318,7 @@ export class TaskService {
       }
     })
 
-    if(task.owner_ids) {
+    if (task.owner_ids) {
       const ownerIds = task.owner_ids.split(',')
       const owners = await this.prisma.user.findMany({
         where: {
@@ -328,7 +340,7 @@ export class TaskService {
       }
     }
 
-    if(task.content) {
+    if (task.content) {
       task.content = `${filePathDomain}${task.content}`
     }
 
@@ -370,6 +382,21 @@ export class TaskService {
       }
     })
 
+    const receiverIds = new Set([updateTaskDto.reviewer_id].concat((updateTaskDto.owner_ids ?? '').split(',')).filter(id => !!id))
+    if(receiverIds.size) {
+      await this.prisma.taskLog.createMany({
+        data: Array.from(receiverIds).map(receiverId => (
+          {
+            task_id: taskId,
+            project_id: task.project_id,
+            type: TaskLogType.Update,
+            editor_id: uid,
+            receiver_id: receiverId
+          }
+        ))
+      })
+    }
+
     return {
       code: 200,
       message: '更新成功'
@@ -382,15 +409,15 @@ export class TaskService {
    * @param {string} taskId
    * @param {UpdateTaskStatusDto} updateTaskStatusDto
    * @return {*}
-   */  
+   */
   async updateTaskStatus(uid: string, taskId: string, updateTaskStatusDto: UpdateTaskStatusDto) {
     const { status } = updateTaskStatusDto
     // 判断是否有权限查看任务详情
     const task = await this.checkTeamPermissionByTaskId(uid, taskId)
-    const { status : currentTaskStatus } = task
+    const { status: currentTaskStatus } = task
 
     // 表示非审核中状态，越级修改状态提示报错
-    if(currentTaskStatus !== TaskStatus.UnderReview && status > currentTaskStatus + 1) {
+    if (currentTaskStatus !== TaskStatus.UnderReview && status > currentTaskStatus + 1) {
       throw new BadRequestException('禁止越级修改任务状态')
     }
 
@@ -405,7 +432,7 @@ export class TaskService {
       // 记录审核通过时间
       updateData['review_time'] = dayjs().unix()
     }
-    
+
     await this.prisma.task.update({
       where: {
         task_id: taskId
@@ -440,6 +467,21 @@ export class TaskService {
         status: TaskStatus.Ban
       }
     })
+
+    const receiverIds = new Set([task.reviewer_id].concat((task.owner_ids ?? '').split(',')).filter(id => !!id))
+    if(receiverIds.size) {
+      await this.prisma.taskLog.createMany({
+        data: Array.from(receiverIds).map(receiverId => (
+          {
+            task_id: taskId,
+            project_id: task.project_id,
+            type: TaskLogType.Delete,
+            editor_id: uid,
+            receiver_id: receiverId
+          }
+        ))
+      })
+    }
 
     return {
       code: 200,
