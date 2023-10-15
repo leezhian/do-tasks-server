@@ -28,6 +28,7 @@ export class ProjectService {
         project_id: true,
         name: true,
         status: true,
+        team_id: true,
         team: {
           select: {
             team_id: true,

@@ -44,6 +44,7 @@ model Team {
   creator       User          @relation(fields: [creator_id], references: [uid]) // 定义外键，creator外键名
   projects      Project[]
   process_types ProcessType[]
+  task_logs     TaskLog[]
 }
 
 model Project {
@@ -55,9 +56,9 @@ model Project {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  team     Team      @relation(fields: [team_id], references: [team_id])
-  tasks    Task[]
-  taskLogs TaskLog[]
+  team      Team      @relation(fields: [team_id], references: [team_id])
+  tasks     Task[]
+  task_logs TaskLog[]
 }
 
 model Task {
@@ -90,6 +91,7 @@ model Task {
 
 model TaskLog {
   id          Int      @id @default(autoincrement())
+  team_id     String   @db.VarChar(30)
   task_id     String   @db.VarChar(30)
   project_id  String   @db.VarChar(30) // 项目id
   type        Int      @db.TinyInt // 任务日志类型 0: 删除 1: 创建 2: 修改
@@ -98,6 +100,7 @@ model TaskLog {
   receiver_id String // 接收者
   createdAt   DateTime @default(now())
 
+  team     Team    @relation(fields: [team_id], references: [team_id])
   editor   User    @relation("log_editor", fields: [editor_id], references: [uid])
   receiver User    @relation("log_receiver", fields: [receiver_id], references: [uid])
   task     Task    @relation(fields: [task_id], references: [task_id])

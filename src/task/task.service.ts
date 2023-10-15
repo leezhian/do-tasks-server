@@ -96,6 +96,7 @@ export class TaskService {
         task_logs: {
           create: Array.from(receiverIds).map(receiverId => (
             {
+              team_id: project.team_id,
               project_id,
               type: TaskLogType.Create,
               editor_id: uid,
@@ -387,6 +388,7 @@ export class TaskService {
       await this.prisma.taskLog.createMany({
         data: Array.from(receiverIds).map(receiverId => (
           {
+            team_id: task.project.team_id,
             task_id: taskId,
             project_id: task.project_id,
             type: TaskLogType.Update,
@@ -473,6 +475,7 @@ export class TaskService {
       await this.prisma.taskLog.createMany({
         data: Array.from(receiverIds).map(receiverId => (
           {
+            team_id: task.project.team_id,
             task_id: taskId,
             project_id: task.project_id,
             type: TaskLogType.Delete,
