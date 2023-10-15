@@ -23,13 +23,18 @@ export class TeamController {
     return this.teamService.getTeamMembers(uid, teamId);
   }
 
-  @Patch('/:teamId')
-  updateTeam(@UserAuthInfo('uid') uid: string, @Param('teamId') teamId: string, @Body() updateTeamDto: UpdateTeamDto) {
+  @Get('/:team_id')
+  getTeamInfo(@UserAuthInfo('uid') uid: string, @Param('team_id') teamId: string) {
+    return this.teamService.getTeamById(uid, teamId);
+  }
+
+  @Patch('/:team_id')
+  updateTeam(@UserAuthInfo('uid') uid: string, @Param('team_id') teamId: string, @Body() updateTeamDto: UpdateTeamDto) {
     return this.teamService.updateTeam(uid, teamId, updateTeamDto);
   }
 
-  @Delete('/:teamId')
-  removeTeam(@UserAuthInfo('uid') uid: string, @Param('teamId') teamId: string) {
+  @Delete('/:team_id')
+  removeTeam(@UserAuthInfo('uid') uid: string, @Param('team_id') teamId: string) {
     return this.teamService.removeTeam(uid, teamId);
   }
 }

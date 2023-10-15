@@ -1,6 +1,7 @@
-import { BadRequestException, ForbiddenException, NotFoundException, Injectable } from '@nestjs/common';
-import { CreateTeamDto } from './dto/create-team.dto';
-import { UpdateTeamDto } from './dto/update-team.dto';
+import { BadRequestException, ForbiddenException, NotFoundException, Injectable } from '@nestjs/common'
+import { pick } from 'lodash'
+import { CreateTeamDto } from './dto/create-team.dto'
+import { UpdateTeamDto } from './dto/update-team.dto'
 import { PrismaService } from '../prisma/prisma.service'
 import { TeamStatus } from '../helper/enum'
 
@@ -43,6 +44,39 @@ export class TeamService {
         status: TeamStatus.Active
       }
     })
+  }
+
+  /**
+   * @description: 根据团队id获取团队详情(且判断权限)
+   * @param {string} uid
+   * @param {string} teamId
+   * @return {*}
+   */  
+  async getTeamById(uid: string, teamId: string) {
+    const team = await this.checkTeamPermissionByTeamId(uid, teamId)
+    let memberList = []
+    if(team.members) {
+      const memberIds = team.members.split(',')
+      memberList = await this.prisma.user.findMany({
+        where: {
+          uid: { in: memberIds }
+        },
+        select: {
+          uid: true,
+          name: true,
+          avatar: true
+        }
+      })
+    }
+
+    return {
+      ...pick(team, ['name', 'team_id', 'creator_id']),
+      members: memberList.map(item => ({
+        label: item.name,
+        value: item.uid,
+        avatar: item.avatar
+      }))
+    }
   }
 
   /**
