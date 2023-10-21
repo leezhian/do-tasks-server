@@ -60,6 +60,8 @@ CREATE TABLE `Task` (
     `priority` TINYINT NULL DEFAULT 4,
     `start_time` INTEGER NOT NULL,
     `end_time` INTEGER NOT NULL,
+    `done_task_time` INTEGER NULL,
+    `review_time` INTEGER NULL,
     `reviewer_id` VARCHAR(191) NOT NULL,
     `owner_ids` VARCHAR(255) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -73,9 +75,13 @@ CREATE TABLE `Task` (
 -- CreateTable
 CREATE TABLE `TaskLog` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `team_id` VARCHAR(30) NOT NULL,
     `task_id` VARCHAR(30) NOT NULL,
+    `project_id` VARCHAR(30) NOT NULL,
     `type` TINYINT NOT NULL,
+    `status` TINYINT NOT NULL DEFAULT 0,
     `editor_id` VARCHAR(191) NOT NULL,
+    `receiver_id` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     PRIMARY KEY (`id`)
@@ -112,10 +118,19 @@ ALTER TABLE `Task` ADD CONSTRAINT `Task_project_id_fkey` FOREIGN KEY (`project_i
 ALTER TABLE `Task` ADD CONSTRAINT `Task_process_type_id_fkey` FOREIGN KEY (`process_type_id`) REFERENCES `ProcessType`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `TaskLog` ADD CONSTRAINT `TaskLog_team_id_fkey` FOREIGN KEY (`team_id`) REFERENCES `Team`(`team_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `TaskLog` ADD CONSTRAINT `TaskLog_editor_id_fkey` FOREIGN KEY (`editor_id`) REFERENCES `User`(`uid`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `TaskLog` ADD CONSTRAINT `TaskLog_receiver_id_fkey` FOREIGN KEY (`receiver_id`) REFERENCES `User`(`uid`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `TaskLog` ADD CONSTRAINT `TaskLog_task_id_fkey` FOREIGN KEY (`task_id`) REFERENCES `Task`(`task_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `TaskLog` ADD CONSTRAINT `TaskLog_project_id_fkey` FOREIGN KEY (`project_id`) REFERENCES `Project`(`project_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `ProcessType` ADD CONSTRAINT `ProcessType_team_id_fkey` FOREIGN KEY (`team_id`) REFERENCES `Team`(`team_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
